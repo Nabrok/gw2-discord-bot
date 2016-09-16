@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node discord_bot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Nabrok.9023",
