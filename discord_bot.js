@@ -1,3 +1,4 @@
+#! /usr/bin/env nodejs
 var
 	config = require('config'),
 	Discord = require('discord.js')
