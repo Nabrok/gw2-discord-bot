@@ -16,7 +16,7 @@ function requestAPIKey(user) {
 		code: code,
 		user: user
 	};
-	user.sendMessage('Please reply with a key from https://acount.arena.net/applications - include the code **'+code+'** in the key name field.');
+	user.sendMessage('Please reply with a key from https://account.arena.net/applications - include the code **'+code+'** in the key name field.');
 	// Remove code in 5 minutes
 	setTimeout(function() { delete open_codes[user.id]; }, 5 * 60 * 1000);
 }
