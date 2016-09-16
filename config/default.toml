@@ -8,13 +8,13 @@ db = "" # database number
 
 [world]
 id = 1017 # world member has to be on to get in role, and default world for wvw stuffs.
-role = "Tarnished Coast" # Name of the role, comment out if you don't want this.
+role = "" # Name of the role, leave blank if you don't want this
 
 [guild]
 id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX"
 key = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX"
-member_role = "member" # Name of the role guild members go in
-#motd_channel = "general" # Will set the channel description to the guild motd
+member_role = "" # Name of the role guild members go in
+motd_channel = "" # Will set the channel description to the guild motd
 
 [discord]
 clientid = "" # Used to generate a link
