@@ -1,0 +1,19 @@
+{
+  "name": "discord_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nabrok.9023",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.0.1",
+    "config": "^1.21.0",
+    "discord.js": "^8.0.0",
+    "redis": "^2.6.2",
+    "request": "^2.74.0",
+    "toml": "^2.3.0"
+  }
+}
