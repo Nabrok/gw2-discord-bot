@@ -44,8 +44,10 @@ module.exports = function(bot) {
 			var regex = new RegExp('('+excluded_subdomains.join('|')+')\.[^\.]*\.');
 			text = Autolinker.link(text, {
 				replaceFn: function(match) {
-					if (match.getType() === 'url' && ! match.url.match(regex)) {
-						return match.getUrl();
+					if (match.getType() === 'url') {
+						if (excluded_subdomains.length === 0 || ! match.url.match(regex)) {
+							return match.getUrl();
+						}
 					}
 					return false;
 				}
