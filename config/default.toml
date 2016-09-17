@@ -17,9 +17,8 @@ member_role = "" # Name of the role guild members go in
 motd_channel = "" # Will set the channel description to the guild motd
 motd_convert_urls = true # Convert urls from the motd that don't start with http:// to actual urls that discord parses to a link
 motd_excluded_subdomains = [ # An array of url subdomains in regular expressions of which the url should not be converted
-  "[^\\.]*ts[^\\.]*", # ts.example.com
-  "[^\\.]*ts3[^\\.]*", # ts3.example.com
-  "[^\\.]*teamspeak[^\\.]*" # teamspeak.example.com
+  "[^\\.]*ts[^\\.]*", # *ts*.example.com
+  "[^\\.]*teamspeak[^\\.]*" # *teamspeak*.example.com
 ]
 
 [discord]
