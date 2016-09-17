@@ -2,8 +2,8 @@ var
 	async = require('async'),
 	Autolinker = require('autolinker'),
 	config = require('config'),
-	gw2 = require('../lib/gw2_api')
-	parseDomain = require('parse-domain'),
+	gw2 = require('../lib/gw2_api'),
+	parseDomain = require('parse-domain')
 ;
 
 var guild_id = config.has('guild.id') ? config.get('guild.id') : null;
