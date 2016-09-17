@@ -15,6 +15,11 @@ id  = "" # Guild unique ID in format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX, this can 
 key = "" # API Key from top guild rank with the "guilds" permission
 member_role = "" # Name of the role guild members go in
 motd_channel = "" # Will set the channel description to the guild motd
+motd_convert_urls = true # Convert urls in the guild motd to actual urls that discord parses to a link, if they don't start with e.g. "http://"
+motd_excluded_subdomains = [ # An array of url subdomains of which the url should not be converted (these are regular expressions)
+  "[^\\.]*ts[^\\.]*", # *ts*.example.com
+  "[^\\.]*teamspeak[^\\.]*" # *teamspeak*.example.com
+]
 
 [discord]
 clientid = "" # Used to generate a link to add the bot to a server
