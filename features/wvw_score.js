@@ -5,7 +5,7 @@ var
 	gw2 = require('../lib/gw2_api')
 ;
 
-var guild_world = config.get('world.id');
+var guild_world = config.has('world.id') ? config.get('world.id') : null;
 
 const objective_values = { Camp: 2, Tower: 4, Keep: 8, Castle: 12 };
 
@@ -68,5 +68,9 @@ function messageReceived(message) {
 }
 
 module.exports = function(bot) {
+	if (! guild_world) {
+		console.log('wvw_score requires guild world to be set.');
+		return;
+	}
 	bot.on("message", messageReceived);
 };

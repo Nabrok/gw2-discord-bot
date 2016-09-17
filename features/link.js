@@ -5,8 +5,12 @@ var
 	gw2 = require('../lib/gw2_api')
 ;
 
-var guild_id = config.get('guild.id');
-var guild_key = config.get('guild.key');
+var guild_id = config.has('guild.id') ? config.get('guild.id') : null;
+var guild_key = config.has('guild.key') ? config.get('guild.key') : null;
+
+var world_id = config.has('world.id') ? config.get('world.id') : null;
+var world_role_name = config.has('world.role') ? config.get('world.role') : null;
+var guild_role_name = config.has('guild.member_role') ? config.get('guild.member_role') : null;
 
 var open_codes = {}; // Codes we're currently expecting to see in an API key name
 
@@ -23,9 +27,6 @@ function requestAPIKey(user) {
 
 function checkUserAccount(user, callback) {
 	if (! callback) callback = function() {};
-	var world_id = config.get('world.id');
-	var world_role_name = config.get('world.role');
-	var guild_role_name = config.get('guild.member_role');
 	var bot = user.client;
 	async.waterfall([
 		function(next) { db.getUserKey(user.id, next) },
@@ -148,23 +149,21 @@ function newMember(server, user) {
 
 function initServer(server, callback) {
 	if (! callback) callback = function() { };
-	var member_role = config.get('guild.member_role');
-	var world_role = config.get('world.role');
 	async.parallel([
 		function(next) {
-			if (! member_role) return next();
-			if (server.roles.has('name', member_role)) next();
+			if (! guild_role_name) return next();
+			if (server.roles.has('name', guild_role_name)) next();
 			else server.createRole({
-				name: member_role,
+				name: guild_role_name,
 				hoist: false,
 				mentionable: true
 			}, next);
 		},
 		function(next) {
-			if (! world_role) return next();
-			if (server.roles.has('name', world_role)) next();
+			if (! world_role_name) return next();
+			if (server.roles.has('name', world_role_name)) next();
 			else server.createRole({
-				name: world_role,
+				name: world_role_name,
 				hoist: false,
 				mentionable: true
 			}, next);

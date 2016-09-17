@@ -5,8 +5,9 @@ var
 	gw2 = require('../lib/gw2_api')
 ;
 
-var guild_id = config.get('guild.id');
-var guild_key = config.get('guild.key');
+var guild_id = config.has('guild.id') ? config.get('guild.id') : null;
+var guild_key = config.has('guild.key') ? config.get('guild.key') : null;
+var member_role_name = config.has('guild.member_role') ? config.get('guild.member_role') : null;
 
 // Create necessary roles in discord.  Can't seem to get the sorting working, so that has to be done manually.
 function initServer(server, ranks, callback) {
@@ -23,7 +24,6 @@ function initServer(server, ranks, callback) {
 
 function syncMembersToRoles(server, members, ranks, callback) {
 	var bot = server.client;
-	var member_role_name = config.get('guild.member_role');
 	async.series([
 		function(next) { initServer(server, ranks, next); }
 	], function(err) {
@@ -120,7 +120,10 @@ function joinedServer(server) {
 }
 
 module.exports = function(bot) {
-	if (! guild_id) return;
+	if (! (guild_id && guild_key)) {
+		console.log('ranks feature requires a guild ID and key.');
+		return;
+	}
 	// Whenever the member list for the guild is called, update everybody's ranks
 	gw2.addHook('/v2/guild/'+guild_id+'/members', function(members, key, next_hook) {
 		gw2.request('/v2/guild/'+guild_id+'/ranks', key, function(err, ranks) {

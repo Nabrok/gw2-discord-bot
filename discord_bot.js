@@ -7,10 +7,12 @@ var
 console.log('Use this link to add the bot to a discord server: https://discordapp.com/oauth2/authorize?client_id='+config.get('discord.clientid')+'&scope=bot&permissions=8');
 var bot = new Discord.Client({ autoReconnect: true });
 
+var features = config.has('features.enabled') ? config.get('features.enabled') : [];
+
 require('./features/link')(bot);
-require('./features/ranks')(bot);
-require('./features/motd')(bot);
-require('./features/wvw_score')(bot);
+features.forEach(feature => {
+	require('./features/'+feature)(bot);
+});
 
 bot.on("ready", function() {
 	console.log('bot ready');

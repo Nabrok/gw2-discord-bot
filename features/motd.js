@@ -4,9 +4,9 @@ var
 	gw2 = require('../lib/gw2_api')
 ;
 
-var guild_id = config.get('guild.id');
-var guild_key = config.get('guild.key');
-var channel_name = config.get('guild.motd_channel');
+var guild_id = config.has('guild.id') ? config.get('guild.id') : null;
+var guild_key = config.has('guild.key') ? config.get('guild.key') : null;
+var channel_name = config.has('guild.motd_channel') ? config.get('guild.motd_channel') : null;
 
 function messageReceived(message) {
 	if (! message.channel.isPrivate) return;
@@ -22,8 +22,10 @@ function messageReceived(message) {
 }
 
 module.exports = function(bot) {
-	if (! guild_id) return;
-	if (! channel_name) return;
+	if (! (guild_id && guild_key && channel_name)) {
+		console.log('motd requires Guild ID, Guild Key, and MOTD channel in config');
+		return;
+	}
 
 	// Update motd every time the guild log is requested
 	gw2.addHook('/v2/guild/'+guild_id+'/log', function(log, key, next_hook) {
