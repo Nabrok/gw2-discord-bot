@@ -2,7 +2,8 @@ var
 	async = require('async'),
 	config = require('config'),
 	db = require('../lib/db'),
-	gw2 = require('../lib/gw2_api')
+	gw2 = require('../lib/gw2_api'),
+	phrases = require('../lib/phrases')
 ;
 
 var guild_id = config.has('guild.id') ? config.get('guild.id') : null;
@@ -97,7 +98,7 @@ function messageReceived(message) {
 			message.channel.startTyping(function() {
 				gw2.request('/v2/guild/'+guild_id+'/members', guild_key, function() {
 					message.channel.stopTyping(function() {
-						message.reply('Member list updated.');
+						message.reply(phrases.get("RANKS_MEMBERS_UPDATED"));
 					});
 				});
 			});

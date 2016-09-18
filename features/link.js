@@ -2,7 +2,8 @@ var
 	async = require('async'),
 	config = require('config'),
 	db = require('../lib/db'),
-	gw2 = require('../lib/gw2_api')
+	gw2 = require('../lib/gw2_api'),
+	phrases = require('../lib/phrases')
 ;
 
 var guild_id = config.has('guild.id') ? config.get('guild.id') : null;
@@ -20,7 +21,7 @@ function requestAPIKey(user) {
 		code: code,
 		user: user
 	};
-	user.sendMessage('Please reply with a key from https://account.arena.net/applications - include the code **'+code+'** in the key name field.');
+	user.sendMessage(phrases.get("LINK_REPLY_WITH_KEY", { code: code }));
 	// Remove code in 5 minutes
 	setTimeout(function() { delete open_codes[user.id]; }, 5 * 60 * 1000);
 }
@@ -110,16 +111,16 @@ function messageReceived(message) {
 					message.channel.stopTyping();
 					if (err) {
 						console.log(err);
-						message.reply("Sorry, an error occurred.  Please try again later.");
+						message.reply(phrases.get("LINK_ERROR"));
 						return;
 					}
 					if (! token.name.match(oc.code)) {
-						message.reply("The key you provided does not have the code **"+oc.code+"** in the name.");
+						message.reply(phrases.get("LINK_KEY_DOESNT_MATCH", { code: oc.code }));
 						return;
 					}
 					var permissions = token.permissions.map((p) => '**'+p+'**').join(', ');
 					db.setUserKey(message.author.id, key, token, function(err) {
-						message.reply("The key **"+token.name+"** has been associated with you.  This key grants the following permissions: "+permissions);
+						message.reply(phrases.get("LINK_KEY_DETAILS", { name: token.name, permissions: permissions }));
 						delete open_codes[message.author.id];
 						checkUserAccount(message.author);
 					});
@@ -143,7 +144,7 @@ function presenceChanged(oldUser, newUser) {
 
 function newMember(server, user) {
 	checkUserAccount(user, function(err, hasAccount) {
-		if (! hasAccount) user.sendMessage('Welcome!  Send me the message "link" when you are ready to apply a Guild Wars 2 API key.');
+		if (! hasAccount) user.sendMessage(phrases.get("LINK_WELCOME"));
 	});
 }
 

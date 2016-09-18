@@ -7,9 +7,9 @@ var
 console.log('Use this link to add the bot to a discord server: https://discordapp.com/oauth2/authorize?client_id='+config.get('discord.clientid')+'&scope=bot&permissions=8');
 var bot = new Discord.Client({ autoReconnect: true });
 
-var features = config.has('features.enabled') ? config.get('features.enabled') : [];
+var features = config.has('features.enabled') ? config.get('features.enabled').slice() : [];
 
-require('./features/link')(bot);
+if (features.indexOf("link") === -1) require('./features/link')(bot);
 features.forEach(feature => {
 	require('./features/'+feature)(bot);
 });
