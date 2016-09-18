@@ -1,13 +1,17 @@
 #! /usr/bin/env nodejs
 var
 	config = require('config'),
-	Discord = require('discord.js')
+	Discord = require('discord.js'),
+	gw2 = require('./lib/gw2_api')
 ;
+
+var language = config.has('features.language') ? config.get('features.language') : "en";
+var features = config.has('features.enabled') ? config.get('features.enabled').slice() : [];
+
+gw2.setLanguage(language);
 
 console.log('Use this link to add the bot to a discord server: https://discordapp.com/oauth2/authorize?client_id='+config.get('discord.clientid')+'&scope=bot&permissions=8');
 var bot = new Discord.Client({ autoReconnect: true });
-
-var features = config.has('features.enabled') ? config.get('features.enabled').slice() : [];
 
 if (features.indexOf("link") === -1) require('./features/link')(bot);
 features.forEach(feature => {
