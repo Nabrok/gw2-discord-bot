@@ -2,7 +2,7 @@ var
 	async = require('async'),
 	Autolinker = require('autolinker'),
 	config = require('config'),
-	gw2 = require('../lib/gw2_api'),
+	gw2 = require('../lib/gw2'),
 	parseDomain = require('parse-domain'),
 	phrases = require('../lib/phrases')
 ;

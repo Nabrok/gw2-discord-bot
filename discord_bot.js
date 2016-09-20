@@ -2,7 +2,7 @@
 var
 	config = require('config'),
 	Discord = require('discord.js'),
-	gw2 = require('./lib/gw2_api')
+	gw2 = require('./lib/gw2')
 ;
 
 var language = config.has('features.language') ? config.get('features.language') : "en";

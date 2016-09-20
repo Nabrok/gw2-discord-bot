@@ -2,7 +2,7 @@ var
 	async = require('async'),
 	db = require('../lib/db'),
 	phrases = require('../lib/phrases'),
-	gw2 = require('../lib/gw2_api')
+	gw2 = require('../lib/gw2')
 ;
 
 function messageReceived(message) {

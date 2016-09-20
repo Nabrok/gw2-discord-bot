@@ -2,7 +2,7 @@ var
 	async = require('async'),
 	config = require('config'),
 	db = require('../lib/db'),
-	gw2 = require('../lib/gw2_api'),
+	gw2 = require('../lib/gw2'),
 	phrases = require('../lib/phrases')
 ;
 
