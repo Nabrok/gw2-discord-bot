@@ -38,7 +38,7 @@ This will reply with the score for the current WvW matchup.  If the user has giv
 
 This will reply with some personal progression related information for the user:
 
-* !fractal level - Responds with the users fractal lavel
+* !fractal level - Responds with the users fractal level
 * !wvw rank - Responds with the users WvW rank.
 
 
