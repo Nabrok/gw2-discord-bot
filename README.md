@@ -30,16 +30,28 @@ This will apply your guild message of the day to the description of a channel in
 
 This will reply with the score for the current WvW matchup.  If the user has given an API key, the users world will be used.  If they have not it will fall back to the world specified in the config file.  There are three options for how the score is displayed:
 
-* !score - The overall score of each world and their PPT.
-* !relscore - Only the overall score of the top server is given, the second and third place scores are given as the difference to the world above.
-* !kd - The kill/death ratio for each world
+* `!score` - The overall score of each world and their PPT.
+* `!relscore` - Only the overall score of the top server is given, the second and third place scores are given as the difference to the world above.
+* `!kd` - The kill/death ratio for each world
 
 ### Progression
 
 This will reply with some personal progression related information for the user:
 
-* !fractal level - Responds with the users fractal level
-* !wvw rank - Responds with the users WvW rank.
+* `!fractal level` - Responds with the users fractal level
+* `!wvw rank` - Responds with the users WvW rank.
+
+### Builds
+
+This will reply with your specialization and trait information for a specified character.
+
+`!build [character name] [pve|wvw|pvp]`
+
+Specify the type of build at the end, if you leave this off it will default to PvE.
+
+For example:
+
+`!build Rytlock Brimstone pvp`
 
 
 Customize Responses and Localication
