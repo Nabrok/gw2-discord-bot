@@ -54,6 +54,7 @@ function messageReceived(message) {
 			if (err) {
 				if (err.message === "endpoint requires authentication") message.reply(phrases.get("CORE_NO_KEY"));
 				else if (err.message === "requires scope characters") message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'characters' }));
+				else if (err.message === "requires scope builds") message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'builds' }));
 				else if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
 				else console.log(err.message);
 				return;
