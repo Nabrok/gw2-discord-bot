@@ -2,7 +2,8 @@ var
 	async = require('async'),
 	config = require('config'),
 	db = require('../lib/db'),
-	gw2 = require('../lib/gw2')
+	gw2 = require('../lib/gw2'),
+	phrases = require('../lib/phrases')
 ;
 
 var guild_world = config.has('world.id') ? config.get('world.id') : null;
@@ -20,6 +21,10 @@ function countPPT(match, color) {
 }
 
 function messageReceived(message) {
+	if (message.content === '!help') {
+		message.author.sendMessage(phrases.get("WVWSCORE_HELP"));
+		return;
+	}
 	if (! message.content.match(/^!(score|kd|relscore)$/)) return;
 	async.waterfall([
 		function(next) { message.channel.startTyping(next); },

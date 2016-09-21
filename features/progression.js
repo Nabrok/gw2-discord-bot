@@ -6,6 +6,10 @@ var
 ;
 
 function messageReceived(message) {
+	if (message.content === '!help') {
+		message.author.sendMessage(phrases.get("PROGRESSION_HELP"));
+		return;
+	}
 	if (! message.content.match(/^!(fractal level|wvw rank)$/)) return;
 	async.waterfall([
 		function(next) { message.channel.startTyping(next); },

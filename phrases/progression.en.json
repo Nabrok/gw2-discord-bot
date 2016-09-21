@@ -1,4 +1,5 @@
 {
+	"PROGRESSION_HELP": "`!fractal level` - Returns your current fractal level.\n`!wvw rank` - Returns your current wvw rank.",
 	"PROGRESSION_FRACTAL_LEVEL": "Your fractal level is %{level}.",
 	"PROGRESSION_WVW_RANK": "Your WvW rank is %{rank}."
 }

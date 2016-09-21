@@ -1,3 +1,4 @@
 {
+	"BUILDS_HELP": "`!build [character_name] (pve|wvw|pvp)` - Show the characters specializations and traits for the game mode.",
 	"BUILDS_NO_CHARACTER": "You do not have a character named \"%{name}\"."
 }

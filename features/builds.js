@@ -6,6 +6,10 @@ var
 ;
 
 function messageReceived(message) {
+	if (message.content === '!help') {
+		message.author.sendMessage(phrases.get("BUILDS_HELP"));
+		return;
+	}
 	var matches = message.content.match(/^!build (.+?)\s*(pve|wvw|pvp)?$/i);
 	if (! matches) return;
 	var character = matches[1];

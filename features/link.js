@@ -94,6 +94,10 @@ function checkUserAccount(user, callback) {
 }
 
 function messageReceived(message) {
+	if (message.content === '!help') {
+		message.author.sendMessage(phrases.get("LINK_HELP"));
+		return;
+	}
 	if (message.channel.isPrivate) {
 		if (message.content === "link") {
 			// User wants to change API key
