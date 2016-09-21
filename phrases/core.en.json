@@ -1,0 +1,4 @@
+{
+	"CORE_NO_KEY": "Sorry, I don't know who you are.  Please direct message me \"link\" to add a Guild Wars 2 API key.",
+	"CORE_MISSING_SCOPE": "You do not have the **%{scope}** permission on your API key.  Message me \"link\" to add a new key with this permission."
+}
