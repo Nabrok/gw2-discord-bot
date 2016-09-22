@@ -36,9 +36,9 @@ function formatWorldNames(worlds, color) {
 			break;
 	}
 	if (color) {
-		return Object.keys(worlds).map(c => worlds[c]).join(' + ')+' ('+color+')';
+		return worlds.join(' + ')+' ('+color+')';
 	} else {
-		return Object.keys(worlds).map(c => worlds[c]).join(' + ');
+		return worlds.join(' + ');
 	}
 }
 
@@ -65,15 +65,11 @@ function messageReceived(message) {
 			var world_ids = [].concat.apply([], Object.keys(match.all_worlds).map(c => match.all_worlds[c]));
 			gw2.getWorlds(world_ids, function(err, worlds) {
 				if (err) return next(err);
-				var names = [];
+				var names = {};
 				var colors = Object.keys(match.all_worlds);
 				for (var c in colors) {
 					var color = colors[c];
-					names[color] = {};
-					for (var w in match.all_worlds[color]) {
-						var world = match.all_worlds[color][w];
-						names[color][world] = worlds[world].name;
-					}
+					names[color] = [ match.worlds[color] ].concat(match.all_worlds[color].filter(w => (w !== match.worlds[color]))).map(w => worlds[w].name);
 				}
 				var scores = Object.keys(match.worlds).map(color => ({
 					color: color,
