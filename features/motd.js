@@ -15,7 +15,7 @@ var excluded_subdomains = config.has('guild.motd_excluded_subdomains') ? config.
 
 function messageReceived(message) {
 	if (! message.channel.isPrivate) return;
-	if (message.content === "refresh motd") {
+	if (message.content.match(new RegExp("^!?"+phrases.get("MOTD_REFRESH")+'$', 'i'))) {
 		message.channel.startTyping(function() {
 			gw2.request('/v2/guild/'+guild_id+'/log', guild_key, function() {
 				message.channel.stopTyping(function() {

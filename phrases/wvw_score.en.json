@@ -1,3 +1,6 @@
 {
+	"WVWSCORE_SCORE": "score",
+	"WVWSCORE_RELSCORE": "relscore",
+	"WVWSCORE_KD": "kd",
 	"WVWSCORE_HELP": "`!score` - Show the scores for your current match-up.\n`!relscore` - Show the overall score for the top server and the difference to the server above for second and third place.\n`!kd` - Show the kill/death ratio"
 }

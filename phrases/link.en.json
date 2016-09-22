@@ -1,4 +1,5 @@
 {
+	"LINK_LINK": "link",
 	"LINK_HELP": "`link` - Initiate the process of adding an API key (only in direct message)",
 	"LINK_REPLY_WITH_KEY": "Please reply with a key from https://account.arena.net/applications - include the code **%{code}** in the key name field.",
 	"LINK_ERROR": "Sorry, an error occurred.  Please try again later.",

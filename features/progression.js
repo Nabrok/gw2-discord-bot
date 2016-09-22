@@ -6,11 +6,13 @@ var
 ;
 
 function messageReceived(message) {
-	if (message.content === '!help') {
+	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
 		message.author.sendMessage(phrases.get("PROGRESSION_HELP"));
 		return;
 	}
-	if (! message.content.match(/^!(fractal level|wvw rank)$/)) return;
+	var fractal_cmd = phrases.get("PROGRESSION_FRACTAL");
+	var wvw_cmd = phrases.get("PROGRESSION_WVW");
+	if (! message.content.match(new RegExp('^!('+fractal_cmd+'|'+wvw_cmd+')$', 'i'))) return;
 	async.waterfall([
 		function(next) { message.channel.startTyping(next); },
 		function(something, next) { db.checkKeyPermission(message.author.id, 'progression', next) },
@@ -32,14 +34,10 @@ function messageReceived(message) {
 				message.reply(phrases.get("CORE_NO_KEY"));
 				return;
 			}
-			switch (message.content) {
-				case "!fractal level":
+			if (message.content.match(new RegExp('^!'+fractal_cmd+'$', 'i')))
 					message.reply(phrases.get("PROGRESSION_FRACTAL_LEVEL", { level: result.fractal_level }));
-					break;
-				case "!wvw rank":
+			else if (message.content.match(new RegExp('^!'+wvw_cmd+'$', 'i')))
 					message.reply(phrases.get("PROGRESSION_WVW_RANK", { rank: result.wvw_rank }));
-					break;
-			}
 		});
 	});
 }
