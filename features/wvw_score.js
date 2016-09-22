@@ -20,6 +20,28 @@ function countPPT(match, color) {
 	}, 0);
 }
 
+function formatWorldNames(worlds, color) {
+	switch (color) {
+		case "green":
+			color = phrases.get("WVWSCORE_GREEN_COLOR");
+			break;
+		case "red":
+			color = phrases.get("WVWSCORE_RED_COLOR");
+			break;
+		case "blue":
+			color = phrases.get("WVWSCORE_BLUE_COLOR");
+			break;
+		default:
+			color = '';
+			break;
+	}
+	if (color) {
+		return worlds.join(' + ')+' ('+color+')';
+	} else {
+		return worlds.join(' + ');
+	}
+}
+
 function messageReceived(message) {
 	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
 		message.author.sendMessage(phrases.get("WVWSCORE_HELP"));
@@ -40,12 +62,18 @@ function messageReceived(message) {
 			gw2.request('/v2/wvw/matches?world='+world, null, next, { ttl: 5000 });
 		},
 		function(match, next) {
-			var world_ids = Object.keys(match.worlds).map(c => match.worlds[c]);
+			var world_ids = [].concat.apply([], Object.keys(match.all_worlds).map(c => match.all_worlds[c]));
 			gw2.getWorlds(world_ids, function(err, worlds) {
 				if (err) return next(err);
+				var names = {};
+				var colors = Object.keys(match.all_worlds);
+				for (var c in colors) {
+					var color = colors[c];
+					names[color] = [ match.worlds[color] ].concat(match.all_worlds[color].filter(w => (w !== match.worlds[color]))).map(w => worlds[w].name);
+				}
 				var scores = Object.keys(match.worlds).map(color => ({
 					color: color,
-					name: worlds[match.worlds[color]].name,
+					names: names[color],
 					score: match.scores[color],
 					ppt: countPPT(match, color),
 					kills: match.kills[color],
@@ -57,12 +85,12 @@ function messageReceived(message) {
 	], function(err, scores) {
 		var result;
 		if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
-			result = scores.sort((a, b) => (b.score - a.score)).map(world => (world.name+': '+world.score.toLocaleString()+' (+'+world.ppt+')')).join("\n");
+			result = scores.sort((a, b) => (b.score - a.score)).map(world => (formatWorldNames(world.names, world.color)+': '+world.score.toLocaleString()+' (+'+world.ppt+')')).join("\n");
 		else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
-			result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (world.name+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
+			result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (formatWorldNames(world.names, world.color)+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
 		else if (message.content.match(new RegExp('^!'+relscore_cmd+'$', 'i'))) {
 			var sorted = scores.sort((a, b) => (b.score - a.score));
-			result = sorted.map((world, index) => (world.name+': '+((index === 0) ? world.score : world.score - sorted[index - 1].score).toLocaleString() +' (+'+world.ppt+')')).join("\n");
+			result = sorted.map((world, index) => (formatWorldNames(world.names, world.color)+': '+((index === 0) ? world.score : world.score - sorted[index - 1].score).toLocaleString() +' (+'+world.ppt+')')).join("\n");
 		}
 		message.channel.stopTyping(function() {
 			message.reply("```"+result+"```");

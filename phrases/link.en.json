@@ -2,8 +2,8 @@
 	"LINK_LINK": "link",
 	"LINK_HELP": "`link` - Initiate the process of adding an API key (only in direct message)",
 	"LINK_REPLY_WITH_KEY": "Please reply with a key from https://account.arena.net/applications - include the code **%{code}** in the key name field.",
-	"LINK_ERROR": "Sorry, an error occurred.  Please try again later.",
-	"LINK_KEY_DOESNT_MATCH": "The key your provided does not have the code **%{code}** in the name.",
-	"LINK_KEY_DETAILS": "The key **%{name}** has been associated with you.  This key grants the following permissions: %{permissions}",
-	"LINK_WELCOME": "Welcome!  Send me the message \"link\" when you are ready to apply a Guild Wars 2 API key."
+	"LINK_ERROR": "Sorry, an error occurred. Please try again later.",
+	"LINK_KEY_DOESNT_MATCH": "The key you provided does not have the code **%{code}** in the name. Please create a new key and include the code in the key name field.",
+	"LINK_KEY_DETAILS": "The key **%{name}** has been associated with you. This key grants the following permissions: %{permissions}",
+	"LINK_WELCOME": "Welcome! Send me the message \"link\" when you are ready to apply a Guild Wars 2 API key."
 }

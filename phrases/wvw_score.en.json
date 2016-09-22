@@ -2,5 +2,8 @@
 	"WVWSCORE_SCORE": "score",
 	"WVWSCORE_RELSCORE": "relscore",
 	"WVWSCORE_KD": "kd",
-	"WVWSCORE_HELP": "`!score` - Show the scores for your current match-up.\n`!relscore` - Show the overall score for the top server and the difference to the server above for second and third place.\n`!kd` - Show the kill/death ratio"
+	"WVWSCORE_HELP": "`!score` - Show the scores of your current WvW match-up.\n`!relscore` - Show the overall WvW score of the top world, along with the differences with the worlds on the second and the third place.\n`!kd` - Show the kill/death ratio of your current WvW match-up.",
+	"WVWSCORE_GREEN_COLOR": "Green",
+	"WVWSCORE_RED_COLOR": "Red",
+	"WVWSCORE_BLUE_COLOR": "Blue"
 }
