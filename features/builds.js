@@ -19,7 +19,12 @@ function messageReceived(message) {
 	var user_key;
 	async.waterfall([
 		function(next) { message.channel.startTyping(next); },
-		function(something, next) { db.getUserKey(message.author.id, next) },
+		function(something, next) { db.checkKeyPermission(message.author.id, ['characters', 'builds'], next) },
+		function(hasPerm, next) {
+			if (! hasPerm) next(new Error("requires scope characters and builds"));
+			else next();
+		},
+		function(next) { db.getUserKey(message.author.id, next) },
 		function(key, next) {
 			// Get a list of characters first
 			if (! key) return next(new Error("endpoint requires authentication"));
@@ -82,9 +87,9 @@ function messageReceived(message) {
 	], function(err, result) {
 		message.channel.stopTyping(function() {
 			if (err) {
-				if (err.message === "endpoint requires authentication") message.reply(phrases.get("CORE_NO_KEY"));
-				else if (err.message === "requires scope characters") message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'characters' }));
-				else if (err.message === "requires scope builds") message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'builds' }));
+				var scope = err.message.match(/^requires scope (.+)?/);
+				if (scope) message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: scope[1] }));
+				else if (err.message === "endpoint requires authentication") message.reply(phrases.get("CORE_NO_KEY"));
 				else if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
 				else console.log(err.message);
 				return;
