@@ -1,5 +1,11 @@
 {
 	"BUILDS_BUILD": "build",
 	"BUILDS_HELP": "`!build [character_name] (pve|wvw|pvp)` - Show the character's specializations and traits for the given game mode.",
-	"BUILDS_NO_CHARACTER": "You do not have a character named \"%{name}\"."
+	"BUILDS_NO_CHARACTER": "You do not have a character named \"%{name}\".",
+	"BUILDS_TRAITS": "Traits",
+	"BUILDS_LEGENDS": "Legends",
+	"BUILDS_SKILLS": "Skills",
+	"BUILDS_HEAL": "Heal",
+	"BUILDS_UTILITIES": "Utilities",
+	"BUILDS_ELITE": "Elite"
 }
