@@ -17,6 +17,7 @@
     "async": "^2.0.1",
     "autolinker": "^1.1.0",
     "config": "^1.21.0",
+    "deep-diff": "^0.3.4",
     "discord.js": "^8.0.0",
     "parse-domain": "^0.2.1",
     "redis": "^2.6.2",

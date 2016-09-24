@@ -1,0 +1,19 @@
+{
+	"SESSION_SHOWLAST": "last session",
+	"SESSION_HELP": "```Session```\n`!last session` - Show some statistics from the last time you played Guild Wars 2.",
+	"SESSION_PLAYTIME": "You played for %{minutes} minutes.",
+	"SESSION_WVW_RANK": "gained %{number} ranks",
+	"SESSION_FRACTAL_LEVEL": "You gained %{levels} fractal levels.",
+	"SESSION_COINS_GAINED": "You gained %{coins}.",
+	"SESSION_COINS_LOST": "You lost %{coins}.",
+	"SESSION_WVW": "In WvW you %{counts}.",
+	"SESSION_WVW_PLAYERS": "killed %{count} players",
+	"SESSION_WVW_YAKS": "killed %{count} yaks",
+	"SESSION_WVW_CAMPS": "captured %{count} camps",
+	"SESSION_WVW_TOWERS": "captured %{count} towers",
+	"SESSION_WVW_KEEPS": "captured %{count} keeps",
+	"SESSION_WVW_CASTLES": "captured %{count} castles",
+	"SESSION_ACHIEVEMENTS": "You earned %{count} achievements: %{list}.",
+	"SESSION_ITEMS_GAINED": "You gained %{count} items worth %{value}.",
+	"SESSION_ITEMS_LOST": "You lost %{count} items worth %{value}."
+}
