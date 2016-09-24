@@ -57,11 +57,8 @@ function startPlaying(user, callback) {
 	async.waterfall([
 		function(next) { db.getObject(session_name, next) },
 		function(session, next) {
-			if (! session || (session.stop && (time - new Date(session.stop.time) > relog_window))) session = {
-				start: {
-					time: time
-				}
-			};
+			if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) return next(null, session);
+			session = { start: { time: time } };
 			gatherData(user, (err, result) => {
 				if (err) return next(err);
 				session.start.data = result;
