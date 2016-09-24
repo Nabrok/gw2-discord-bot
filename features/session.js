@@ -247,10 +247,6 @@ function presenceChanged(oldState, newState) {
 }
 
 function messageReceived(message) {
-	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
-		message.author.sendMessage(phrases.get("SESSION_HELP"));
-		return;
-	}
 	var cmd = new RegExp('^!'+phrases.get("SESSION_SHOWLAST")+'$', 'i');
 	if (! message.content.match(cmd)) return;
 	message.channel.startTyping(() => {

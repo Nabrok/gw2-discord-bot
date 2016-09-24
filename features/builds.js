@@ -6,10 +6,6 @@ var
 ;
 
 function messageReceived(message) {
-	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
-		message.author.sendMessage(phrases.get("BUILDS_HELP"));
-		return;
-	}
 	var cmd = new RegExp('^!'+phrases.get("BUILDS_BUILD")+' (.+?)\s*(pve|wvw|pvp)?$', 'i');
 	var matches = message.content.match(cmd);
 	if (! matches) return;

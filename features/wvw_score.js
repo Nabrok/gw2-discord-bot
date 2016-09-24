@@ -43,10 +43,6 @@ function formatWorldNames(worlds, color) {
 }
 
 function messageReceived(message) {
-	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
-		message.author.sendMessage(phrases.get("WVWSCORE_HELP"));
-		return;
-	}
 	var score_cmd = phrases.get("WVWSCORE_SCORE");
 	var relscore_cmd = phrases.get("WVWSCORE_RELSCORE");
 	var kd_cmd = phrases.get("WVWSCORE_KD");

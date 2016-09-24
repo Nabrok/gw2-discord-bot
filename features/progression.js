@@ -6,10 +6,6 @@ var
 ;
 
 function messageReceived(message) {
-	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
-		message.author.sendMessage(phrases.get("PROGRESSION_HELP"));
-		return;
-	}
 	var fractal_cmd = phrases.get("PROGRESSION_FRACTAL");
 	var wvw_cmd = phrases.get("PROGRESSION_WVW");
 	if (! message.content.match(new RegExp('^!('+fractal_cmd+'|'+wvw_cmd+')$', 'i'))) return;

@@ -94,10 +94,6 @@ function checkUserAccount(user, callback) {
 }
 
 function messageReceived(message) {
-	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
-		message.author.sendMessage(phrases.get("LINK_HELP"));
-		return;
-	}
 	if (message.channel.isPrivate) {
 		if (message.content.match(new RegExp('^!?'+phrases.get("LINK_LINK")+'$', 'i'))) {
 			// User wants to change API key
