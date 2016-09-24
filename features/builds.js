@@ -19,15 +19,16 @@ function messageReceived(message) {
 	var user_key;
 	async.waterfall([
 		function(next) { message.channel.startTyping(next); },
-		function(something, next) { db.checkKeyPermission(message.author.id, ['characters', 'builds'], next) },
-		function(hasPerm, next) {
-			if (! hasPerm) next(new Error("requires scope characters and builds"));
-			else next();
+		function(something, next) { db.getUserKey(message.author.id, next) },
+		function(key, next) {
+			if (! key) return next(new Error("endpoint requires authentication"));
+			if (! db.checkKeyPermission(message.author.id, ['characters', 'builds'], function(err, hasPerm) {
+				if (! hasPerm) return next(new Error("requires scope characters and builds"));
+				next(null, key);
+			}));
 		},
-		function(next) { db.getUserKey(message.author.id, next) },
 		function(key, next) {
 			// Get a list of characters first
-			if (! key) return next(new Error("endpoint requires authentication"));
 			user_key = key;
 			gw2.request('/v2/characters/', key, next);
 		},
