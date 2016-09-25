@@ -121,6 +121,7 @@ function parseSession(user, callback) {
 		// Rearrange some arrays into key/value pairs by id (makes it easier to diff)
 		['start', 'stop'].forEach(t => {
 			['wallet', 'achievements'].forEach(d => {
+				if (! session[t].data[d]) return;
 				session[t].data[d] = session[t].data[d].reduce((total, i) => {
 					total[i.id] = i;
 					return total;
@@ -129,6 +130,7 @@ function parseSession(user, callback) {
 			// Total count of items (no matter where they are)
 			session[t].data.all_items = {};
 			['materials', 'bank', 'shared'].forEach(s => {
+				if (! session[t].data[s]) return;
 				session[t].data.all_items = session[t].data[s].reduce((total,i) => {
 					if (!i) return total;
 					if (i.binding) return total;
@@ -137,8 +139,9 @@ function parseSession(user, callback) {
 					return total;
 				}, session[t].data.all_items);
 			});
-			Object.keys(session[t].data.characters).forEach(c => {
+			if (session[t].data.characters) Object.keys(session[t].data.characters).forEach(c => {
 				var character = session[t].data.characters[c];
+				if (! character.bags) return;
 				session[t].data.all_items = character.bags.reduce((total, b) => {
 					if (! b) return total;
 					b.inventory.forEach(i => {
