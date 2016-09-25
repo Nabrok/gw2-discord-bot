@@ -46,6 +46,9 @@ function gatherData(user, callback) {
 					});
 				}
 			}
+			if (permissions.indexOf('pvp') > -1) {
+				queries.pvp = function(next) { gw2.request('/v2/pvp/stats', key, next) };
+			}
 			async.parallelLimit(queries, 5, next);
 		}
 	], callback);
@@ -156,9 +159,11 @@ function parseSession(user, callback) {
 		});
 		var differences = diff(session.start.data, session.stop.data);
 		var wvw_stats = [];
+		var pvp_stats = [];
 		var new_achievements = [];
 		var items_gained = [];
 		var items_lost = [];
+		var pvp_rank_ups = 0;
 		if (differences) differences.forEach(d => {
 			// account differences
 			if (d.path[0] === "account" && d.path[1] === "wvw_rank") wvw_stats.push(phrases.get("SESSION_WVW_RANK", { number: (d.rhs - d.lhs) }));
@@ -174,6 +179,18 @@ function parseSession(user, callback) {
 				if ((d.kind === "N" && d.rhs.done) || (d.kind === "E" && d.path[2] === "done")) {
 					new_achievements.push(d.path[1]);
 				}
+				// PvP stuff
+				if (d.path[2] === "current") {
+					if (d.path[1] === "239") pvp_stats.push(phrases.get("SESSION_PVP_KILLS", { count: d.rhs - d.lhs }));
+					if (d.path[1] === "265") pvp_stats.push(phrases.get("SESSION_PVP_RATED_WINS", { count: d.rhs - d.lhs }));
+					if (d.path[1] === "241") {
+						var unrated_before = session.start.data.achievements['241'].current - session.start.data.achievements['265'].current;
+						var unrated_after = session.stop.data.achievements['241'].current - session.stop.data.achievements['265'].current;
+						var unrated_diff = unrated_after - unrated_before;
+						if (unrated_diff) pvp_stats.push(phrases.get("SESSION_PVP_UNRATED_WINS", { count: unrated_diff }));
+					}
+				}
+				// WvW stuff
 				if (d.path[1] === "283") wvw_stats.push(phrases.get("SESSION_WVW_PLAYERS", { count:(d.rhs - d.lhs).toLocaleString() }));
 				if (d.path[1] === "288") wvw_stats.push(phrases.get("SESSION_WVW_YAKS", { count: (d.rhs - d.lhs).toLocaleString() }));
 				if (d.path[1] === "291") wvw_stats.push(phrases.get("SESSION_WVW_CAMPS", { count: (d.rhs - d.lhs).toLocaleString() }));
@@ -193,7 +210,13 @@ function parseSession(user, callback) {
 					items_lost.push({ id: d.path[1], change: change * -1 });
 				}
 			}
+			// pvp differences
+			if (d.path[0] === "pvp") {
+				if (d.path[1] === "pvp_rank" || d.path[1] === "pvp_rank_rollovers") pvp_rank_ups += (d.rhs - d.lhs);
+			}
 		});
+		if (pvp_rank_ups) pvp_stats.unshift(phrases.get("SESSION_PVP_RANK", { number: pvp_rank_ups }));
+		if (pvp_stats.length > 0) sentences.push(phrases.get("SESSION_PVP", { counts: pvp_stats.join(", ") }));
 		if (wvw_stats.length > 0) sentences.push(phrases.get("SESSION_WVW", { counts: wvw_stats.join(", ") }));
 		async.parallel({
 			achievements: function(next) { gw2.getAchievements(new_achievements, next); },
