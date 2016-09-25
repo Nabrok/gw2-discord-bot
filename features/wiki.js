@@ -21,7 +21,7 @@ function htmlToMessage(html) {
 				filter: function(node) {
 					return !node.nodeName.match(/^(b|strong|i|em|s|del|p)$/i);
 				},
-				replacement: function(innerHTML, node) { return "";	}
+				replacement: function(innerHTML, node) { return ""; }
 			}
 		]
 	});
@@ -41,7 +41,7 @@ function messageReceived(message) {
 						redirects: true,
 						prop: 'text'
 					}).then((response) => {
-						next(null, response.parse.text['*']);
+						next(null, response);
 					}).catch((error) => {
 						if (error.code == "missingtitle") next(new Error("not found"));
 						else next(new Error(error.info));
@@ -50,7 +50,8 @@ function messageReceived(message) {
 					next(new Error("no title"));
 				}
 			},
-			function(text, next) {
+			function(response, next) {
+				var text = response.parse.text['*'];
 				if (text) {
 					text = htmlToMessage(text).split("\n")[0].trim();
 					var url = encodeURI("https://wiki.guildwars2.com/wiki/"+response.parse.title);
