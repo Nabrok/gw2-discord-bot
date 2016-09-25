@@ -5,5 +5,6 @@
 	"WVW_SCORE_HELP": "**__WvW Score__**\n\n`!score` - Show the scores of your current WvW match-up.\n`!relscore` - Show the overall WvW score of the top world, along with the differences with the worlds on the second and the third place.\n`!kd` - Show the kill/death ratio of your current WvW match-up.",
 	"WVWSCORE_GREEN_COLOR": "Green",
 	"WVWSCORE_RED_COLOR": "Red",
-	"WVWSCORE_BLUE_COLOR": "Blue"
+	"WVWSCORE_BLUE_COLOR": "Blue",
+	"WVWSCORE_ERROR": "Sorry, the score could not be determined at this time."
 }

@@ -79,14 +79,19 @@ function messageReceived(message) {
 			});
 		}
 	], function(err, scores) {
+		if (err) console.log(err.message);
 		var result;
-		if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
-			result = scores.sort((a, b) => (b.score - a.score)).map(world => (formatWorldNames(world.names, world.color)+': '+world.score.toLocaleString()+' (+'+world.ppt+')')).join("\n");
-		else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
-			result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (formatWorldNames(world.names, world.color)+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
-		else if (message.content.match(new RegExp('^!'+relscore_cmd+'$', 'i'))) {
-			var sorted = scores.sort((a, b) => (b.score - a.score));
-			result = sorted.map((world, index) => (formatWorldNames(world.names, world.color)+': '+((index === 0) ? world.score : world.score - sorted[index - 1].score).toLocaleString() +' (+'+world.ppt+')')).join("\n");
+		if (scores) {
+			if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
+				result = scores.sort((a, b) => (b.score - a.score)).map(world => (formatWorldNames(world.names, world.color)+': '+world.score.toLocaleString()+' (+'+world.ppt+')')).join("\n");
+			else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
+				result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (formatWorldNames(world.names, world.color)+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
+			else if (message.content.match(new RegExp('^!'+relscore_cmd+'$', 'i'))) {
+				var sorted = scores.sort((a, b) => (b.score - a.score));
+				result = sorted.map((world, index) => (formatWorldNames(world.names, world.color)+': '+((index === 0) ? world.score : world.score - sorted[index - 1].score).toLocaleString() +' (+'+world.ppt+')')).join("\n");
+			}
+		} else {
+			result = phrases.get("WVWSCORE_ERROR");
 		}
 		message.channel.stopTyping(function() {
 			message.reply("```"+result+"```");
