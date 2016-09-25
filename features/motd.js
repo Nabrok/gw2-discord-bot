@@ -17,8 +17,13 @@ function messageReceived(message) {
 	if (! message.channel.isPrivate) return;
 	if (message.content.match(new RegExp("^!?"+phrases.get("MOTD_REFRESH")+'$', 'i'))) {
 		message.channel.startTyping(function() {
-			gw2.request('/v2/guild/'+guild_id+'/log', guild_key, function() {
+			gw2.request('/v2/guild/'+guild_id+'/log', guild_key, function(err) {
 				message.channel.stopTyping(function() {
+					if (err) {
+						message.reply(phrases.get("CORE_ERROR"));
+						console.log(err.message);
+						return;
+					}
 					message.reply(phrases.get("MOTD_UPDATED"));
 				});
 			});

@@ -4,5 +4,6 @@
 	"CORE_MISSING_SCOPE": "You do not have the **%{scope}** permission on your API key. Message me \"link\" to add a new key with this permission.",
 	"CORE_GOLD": "%{count}g",
 	"CORE_SILVER": "%{count}s",
-	"CORE_COPPER": "%{count}c"
+	"CORE_COPPER": "%{count}c",
+	"CORE_ERROR": "Sorry, an error has occured."
 }

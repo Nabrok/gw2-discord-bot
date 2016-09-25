@@ -1,6 +1,7 @@
 {
 	"SESSION_SHOWLAST": "last session",
 	"SESSION_HELP": "**__Session__**\n\n`!last session` - Show some statistics from the last time you played Guild Wars 2.",
+	"SESSION_NO_SESSION": "Sorry, I don't have any session data for you.",
 	"SESSION_PLAYTIME": "You played for %{minutes} minutes.",
 	"SESSION_FRACTAL_LEVEL": "You gained %{levels} fractal levels.",
 	"SESSION_COINS_GAINED": "You gained %{coins}.",

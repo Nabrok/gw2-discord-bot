@@ -23,7 +23,10 @@ function messageReceived(message) {
 			if (err) {
 				if (err.message === "endpoint requires authentication") message.reply(phrases.get("CORE_NO_KEY"));
 				if (err.message === "requires scope progression") message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'progression' }));
-				else console.log(err.message);
+				else {
+					message.reply(phrases.get("CORE_ERROR"));
+					console.log(err.message);
+				}
 				return;
 			}
 			if (! result) {

@@ -103,6 +103,7 @@ function parseSession(user, callback) {
 	async.waterfall([
 		function(next) { db.getObject(session_name, next) },
 		function(session, next) {
+			if (! session) return next(new Error("no session"));
 			if (session.stop) return next(null, session); // Complete session, nothing more to do
 			// Session still in progress, gather the current data
 			session.stop = { time: new Date() };
@@ -274,6 +275,11 @@ function messageReceived(message) {
 	if (! message.content.match(cmd)) return;
 	message.channel.startTyping(() => {
 		parseSession(message.author, (err, string) => {
+			if (err && err.message === "no session") string = phrases.get("SESSION_NO_SESSION");
+			else if (err) {
+				string = phrases.get("CORE_ERROR");
+				console.log(err.message);
+			}
 			message.channel.stopTyping(() => { message.reply(string) });
 		});
 	});
