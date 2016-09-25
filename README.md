@@ -43,15 +43,17 @@ This will reply with some personal progression related information for the user:
 
 ### Builds
 
-This will reply with your specialization and trait information for a specified character.
-
-`!build [character name] [pve|wvw|pvp]`
-
-Specify the type of build at the end, if you leave this off it will default to PvE.
+`!build [character name] [pve|wvw|pvp]` - Responds with your specialization and trait information for a specified character.  Specify the type of build at the end, if you leave this off it will default to PvE.
+`!equip [character name]` - Responds with a listing of currently equiped pve/wvw gear.
 
 For example:
 
 `!build Rytlock Brimstone pvp`
+`!equip Rytlock Brimstone`
+
+### Session
+
+When this feature is enabled, the game will monitor users game status in discord.  When they enter and leave Guild Wars 2 it creates a snapshot of their account.  Entering the `!last session` command will display a summary of what they did during that session.
 
 
 Customize Responses and Localication
