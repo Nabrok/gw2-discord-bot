@@ -25,6 +25,11 @@ motd_excluded_subdomains = [ # An array of url subdomains of which the url shoul
 clientid = "" # Used to generate a link to add the bot to a server
 token = "" # Token for your discord bot user
 
+[web]
+domain = "127.0.0.1"
+protocol = "http"
+port = "3000"
+
 [features]
 language = "en"
-enabled = ["ranks", "motd", "wvw_score", "progression", "builds", "wiki", "session", "whois"]
+enabled = ["ranks", "motd", "wvw_score", "progression", "builds", "wiki", "session", "whois", "web"]
