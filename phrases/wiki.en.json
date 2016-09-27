@@ -1,6 +1,7 @@
 {
 	"WIKI_WIKI": "wiki",
 	"WIKI_HELP": "**__Wiki__**\n\n`!wiki <title>` - Search the wiki for an article and return a summary and the article link if available.",
+	"WIKI_LINK": "%{title}: %{url}",
 	"WIKI_MORE": "More: %{url}",
 	"WIKI_NO_TERM": "I don't know what to look for. Please include a wiki article title.",
 	"WIKI_NOT_FOUND": "I could not find what you were looking for. Try using a different wiki article title.",

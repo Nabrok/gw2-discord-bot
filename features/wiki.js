@@ -36,10 +36,30 @@ function messageReceived(message) {
 				var term = match[1];
 				if (term) {
 					wiki.request({
-						action: 'parse',
-						page: term,
-						redirects: true,
-						prop: 'text'
+						action: 'query',
+						list: 'search',
+						srsearch: term,
+						srwhat: 'nearmatch'
+					}).then((response) => {
+						if (response.query.search.length == 0) {
+							return wiki.request({
+								action: 'query',
+								list: 'search',
+								srsearch: term,
+								srwhat: 'title'
+							});
+						}
+						return response;
+					}).then((response) => {
+						if (response.query.search.length > 0) {
+							return wiki.request({
+								action: 'parse',
+								page: response.query.search[0].title,
+								redirects: true,
+								prop: 'text'
+							});
+						}
+						throw { code: 'missingtitle' };
 					}).then((response) => {
 						next(null, response);
 					}).catch((error) => {
@@ -56,7 +76,7 @@ function messageReceived(message) {
 					text = htmlToMessage(text).split("\n")[0].trim();
 					var url = encodeURI("https://wiki.guildwars2.com/wiki/"+response.parse.title);
 					if (text) text += "\n\n"+phrases.get("WIKI_MORE", { url: url });
-					else text = url;
+					else text = phrases.get("WIKI_LINK", { title: response.parse.title, url: url });
 					next(null, text);
 				} else {
 					next(new Error("not found"));
