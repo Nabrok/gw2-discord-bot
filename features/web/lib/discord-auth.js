@@ -1,8 +1,8 @@
 var
-	express = require('express'),
 	config = require('config'),
+	ClientOAuth2 = require('client-oauth2'),
 	request = require('request'),
-	ClientOAuth2 = require('client-oauth2')
+	nJwt = require('njwt')
 ;
 
 var client_id = config.get('discord.clientid');
@@ -10,8 +10,11 @@ var client_secret = config.get('discord.client_secret');
 var protocol = config.has('web.protocol') ? config.get('web.protocol') : 'http';
 var http_port = config.get('web.port');
 var domain = config.get('web.domain');
+var jwt_secret = config.has('web.jwt_secret') ? config.get('web.jwt_secret') : client_secret;
 
-var discordAuth = new ClientOAuth2({
+var auth = {};
+
+auth.client = new ClientOAuth2({
 	clientId: client_id,
 	clientSecret: client_secret,
 	accessTokenUri: 'https://discordapp.com/api/oauth2/token',
@@ -20,19 +23,9 @@ var discordAuth = new ClientOAuth2({
 	scopes: ['identify']
 });
 
-var app = express();
-
-app.get('/login', (req, res) => {
-	var uri = discordAuth.code.getUri();
-	res.redirect(uri);
-});
-
-app.get('/', function(req, res) {
-	res.send('<html><body><a href="/login">login</a></body></html>');
-});
-
-app.get('/auth', function(req, res) {
-	discordAuth.code.getToken(req.originalUrl).then(user => {
+auth.getUri = auth.client.code.getUri;
+auth.processLogin = (code, callback) => {
+	auth.client.code.getToken(code).then(user => {
 		var options = {
 			url: 'https://discordapp.com/api/users/@me',
 			json: true,
@@ -43,14 +36,15 @@ app.get('/auth', function(req, res) {
 		};
 		request(options, function(error, http_res, result) {
 			if (error) console.log(error);
-			res.send('Hello '+result.username+'!');
+			var jwt = nJwt.create({ sub: JSON.stringify(result) }, jwt_secret);
+			callback({ message: 'success', jwt: jwt.compact() });
 		});
+	}).catch(err => {
+		console.log(err);
 	});
-});
+}
 
-app.listen(http_port, function() {
-	console.log('http listenting on port '+http_port+'!');
-});
+module.exports = auth;
 
-module.exports = function(bot) {
-};
+
+module.exports = auth;
