@@ -9,7 +9,9 @@
   },
   "scripts": {
     "start": "node discord_bot.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "webpack -d --watch",
+    "build": "NODE_ENV=production webpack -p"
   },
   "author": "Nabrok.9023",
   "license": "ISC",

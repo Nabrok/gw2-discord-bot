@@ -1,7 +1,7 @@
 # Project files
 config/local*
 phrases/local.js*
-
+features/web/public/bundle.js.map
 
 ########################################################################
 # gitignore definitions taken from https://github.com/github/gitignore #
