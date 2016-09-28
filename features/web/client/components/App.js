@@ -38,7 +38,8 @@ export default class App extends React.Component {
 					<Navbar.Header><Navbar.Brand><Link to="/">Discord Guild Wars 2 Bot</Link></Navbar.Brand></Navbar.Header>
 					<Nav pullRight>
 						{ this.state.userLoggedIn && <NavDropdown eventKey={1} title={ this.state.user } id="user_dropdown">
-							<LinkContainer to="/logout"><NavItem eventKey={1}>Logout</NavItem></LinkContainer>
+							<LinkContainer to="/api_key"><NavItem eventKey={1}>API Key</NavItem></LinkContainer>
+							<LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer>
 						</NavDropdown> }
 					</Nav>
 				</Navbar>

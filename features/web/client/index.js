@@ -6,6 +6,7 @@ import App from './components/App';
 import Home from './components/Home';
 import Login from './components/Login';
 import Auth from './components/Auth';
+import ApiKey from './components/ApiKey';
 
 import LoginStore from './stores/LoginStore';
 import LoginActions from './actions/LoginActions';
@@ -25,6 +26,7 @@ var routes = (
 	<Route path="/" component={App}>
 		<Route onEnter={needsLogin}>
 			<IndexRoute component={Home} />
+			<Route path="/api_key" component={ApiKey} />
 		</Route>
 		<Route path="/get_login" component={Login} />
 		<Route path="/auth" component={Auth} />

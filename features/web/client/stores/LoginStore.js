@@ -32,6 +32,10 @@ class LoginStore extends BaseStore {
 		return JSON.parse(this._user.sub);
 	}
 
+	get jwt() {
+		return this._jwt;
+	}
+
 	get username() {
 		if (! this._user) return '';
 		return this.sub.username;
