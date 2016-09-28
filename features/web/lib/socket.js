@@ -1,9 +1,10 @@
 var
+	Promise = require('bluebird'),
 	discordAuth = require('./discord-auth'),
 	config = require('config'),
 	nJwt = require('njwt'),
-	db = require('../../../lib/db'),
-	gw2 = require('../../../lib/gw2')
+	db = Promise.promisifyAll(require('../../../lib/db')),
+	gw2 = Promise.promisifyAll(require('../../../lib/gw2'))
 ;
 
 var jwt_secret = config.has('web.jwt_secret') ? config.get('web.jwt_secret') : config.get('discord.client_secret');
@@ -23,20 +24,18 @@ function newConnection(socket) {
 	};
 
 	socket.verifiedOn('get token', (data, cb) => {
-		db.getUserToken(data.user.id, (err, token) => {
-			if (err) return cb({ error: err.message });
-			cb({ message: 'success', data: JSON.parse(token) });
-		});
+		db.getUserTokenAsync(data.user.id)
+			.then(token => cb({ message: 'success', data: JSON.parse(token) }))
+			.catch(err => cb({ error: err.message }))
+		;
 	});
 
 	socket.verifiedOn('set key', (data, cb) => {
-		gw2.request('/v2/tokeninfo', data.data, (err, token) => {
-			if (err) return cb({ error: err.message });
-			db.setUserKey(data.user.id, data.data, token, (err) => {
-				if (err) return cb({ error: err.message });
-				cb({ mesage: 'success' });
-			});
-		});
+		gw2.requestAsync('/v2/tokeninfo', data.data)
+			.then(token => db.setUserKeyAsync(data.user.id, data.data, token))
+			.then(() => cb({ message: 'success' }))
+			.catch(err => cb({ error: err.message }))
+		;
 	});
 }
 
