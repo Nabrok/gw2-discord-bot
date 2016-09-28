@@ -11,9 +11,7 @@ var domain = config.get('web.domain');
 
 var app = express();
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
-
-require('./lib/socket')(io);
+require('./lib/socket')(http);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
