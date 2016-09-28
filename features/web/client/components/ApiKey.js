@@ -78,6 +78,8 @@ class NewKey extends React.Component {
 	saveKey() {
 		Socket.send('set key', this.state.key).then(res => {
 			this.props.onChange();
+		}).catch(err => {
+			alert('Error saving key');
 		});
 	}
 
