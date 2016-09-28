@@ -7,6 +7,7 @@ import Home from './components/Home';
 import Login from './components/Login';
 import Auth from './components/Auth';
 import ApiKey from './components/ApiKey';
+import Characters from './components/Characters';
 
 import LoginStore from './stores/LoginStore';
 import LoginActions from './actions/LoginActions';
@@ -27,6 +28,7 @@ var routes = (
 		<Route onEnter={needsLogin}>
 			<IndexRoute component={Home} />
 			<Route path="/api_key" component={ApiKey} />
+			<Route path="/characters" component={Characters} />
 		</Route>
 		<Route path="/get_login" component={Login} />
 		<Route path="/auth" component={Auth} />
