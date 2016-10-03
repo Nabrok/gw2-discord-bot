@@ -27,4 +27,4 @@ token = "" # Token for your discord bot user
 
 [features]
 language = "en"
-enabled = ["ranks", "motd", "wvw_score", "progression", "builds", "wiki", "session"]
+enabled = ["ranks", "motd", "wvw_score", "progression", "builds", "wiki", "session", "whois"]
