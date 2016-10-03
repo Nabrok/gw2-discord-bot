@@ -62,6 +62,10 @@ function newConnection(socket) {
 				var jwt = nJwt.create({ sub: JSON.stringify(result) }, jwt_secret);
 				cb({ message: 'success', jwt: jwt.compact() });
 			})
+			.catch(err => {
+				console.log(err.message);
+				cb({ error: err.message });
+			})
 		;
 	});
 

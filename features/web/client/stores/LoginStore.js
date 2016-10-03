@@ -2,8 +2,6 @@ import BaseStore from './BaseStore';
 import jwt_decode from 'jwt-decode';
 
 import Socket from '../services/WebSocket';
-import TokenActions from  '../actions/TokenActions';
-import PrivacyActions from '../actions/PrivacyActions';
 
 class LoginStore extends BaseStore {
 	constructor() {
@@ -20,8 +18,6 @@ class LoginStore extends BaseStore {
 				this._jwt = action.jwt;
 				this._user = jwt_decode(this._jwt);
 				this.emitChange();
-				Socket.send('get token').then(TokenActions.receiveToken);
-				Socket.send('get privacy').then(PrivacyActions.receive);
 				break;
 			case 'LOGOUT':
 				this._user = null;

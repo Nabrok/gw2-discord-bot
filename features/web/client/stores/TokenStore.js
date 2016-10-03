@@ -1,6 +1,7 @@
 import BaseStore from './BaseStore';
 import Socket from '../services/WebSocket';
 import TokenActions from '../actions/TokenActions';
+import LoginStore from './LoginStore';
 
 class TokenStore extends BaseStore {
 	constructor() {
@@ -17,6 +18,10 @@ class TokenStore extends BaseStore {
 			case 'TOKEN':
 				this._token = action.token;
 				this.emitChange();
+				break;
+			case 'LOGIN':
+				LoginStore.waitFor();
+				Socket.send('get token').then(TokenActions.receiveToken);
 				break;
 			case 'LOGOUT':
 				this._token = null;

@@ -7,6 +7,10 @@ export default class BaseStore extends EventEmitter {
 		this._listeners = 0;
 	}
 
+	waitFor() {
+		AppDispatcher.waitFor([this._dispatchToken]);
+	}
+
 	subscribe(actionSubscribe) {
 		this._dispatchToken = AppDispatcher.register(actionSubscribe());
 	}

@@ -1,6 +1,7 @@
-
 import BaseStore from './BaseStore';
 import Socket from '../services/WebSocket';
+
+import LoginStore from './LoginStore';
 import PrivacyActions from '../actions/PrivacyActions';
 
 class PrivacyStore extends BaseStore {
@@ -18,6 +19,10 @@ class PrivacyStore extends BaseStore {
 			case 'PRIVACY':
 				this._privacy = action.privacy;
 				this.emitChange();
+				break;
+			case 'LOGIN':
+				LoginStore.waitFor();
+				Socket.send('get privacy').then(PrivacyActions.receive).catch(err => console.log(err));
 				break;
 			case 'LOGOUT':
 				this._privacy = {};
