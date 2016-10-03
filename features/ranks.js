@@ -28,6 +28,7 @@ function syncMembersToRoles(server, members, ranks, callback) {
 	async.series([
 		function(next) { initServer(server, ranks, next); }
 	], function(err) {
+		if (err) return callback(err);
 		var membersInRank = {};
 		ranks.forEach(rank => { membersInRank[rank.id] = []; });
 		var allMembers = [];
@@ -108,6 +109,10 @@ function messageReceived(message) {
 
 function botReady(bot) {
 	gw2.request('/v2/guild/'+guild_id+'/ranks', guild_key, function(err, ranks) {
+		if (err) {
+			console.log(err.message);
+			return;
+		}
 		async.each(bot.servers, function(server, next_server) {
 			initServer(server, ranks, next_server);
 		});
@@ -128,6 +133,10 @@ module.exports = function(bot) {
 	// Whenever the member list for the guild is called, update everybody's ranks
 	gw2.addHook('/v2/guild/'+guild_id+'/members', function(members, key, next_hook) {
 		gw2.request('/v2/guild/'+guild_id+'/ranks', key, function(err, ranks) {
+			if (err) {
+				console.log(err.message);
+				return next_hook(err);
+			}
 			async.each(bot.servers, function(server, next_server) {
 				syncMembersToRoles(server, members, ranks, next_server);
 			}, next_hook);
