@@ -10,7 +10,7 @@ class PrivacyStore extends BaseStore {
 
 		Socket.on('new privacy', PrivacyActions.receive);
 
-		this._privacy = null;
+		this._privacy = {};
 	}
 
 	_registerToActions(action) {
@@ -20,7 +20,7 @@ class PrivacyStore extends BaseStore {
 				this.emitChange();
 				break;
 			case 'LOGOUT':
-				this._privacy = null;
+				this._privacy = {};
 				this.emitChange();
 				break;
 		}
