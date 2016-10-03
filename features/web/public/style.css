@@ -1,0 +1,55 @@
+img.item {
+	border: 2px solid #888;
+	width: 32px;
+	height: 32px;
+}
+
+img.Legendary { border-color: #4c139d; }
+img.Ascended { border-color: #fb3e8d; }
+img.Exotic { border-color: #ffa405; }
+img.Rare { border-color: #fcd00b; }
+img.Masterwork { border-color: #1a9306; }
+img.Fine { border-color: #62a4da; }
+img.Basic { border-color: #000000; }
+img.Junk { border-color: #aaaaaa; }
+
+div.spec_line {
+	width: 647px;
+	height: 136px;
+	border: 1px solid black;
+	overflow: hidden;
+	position: relative;
+	margin-bottom: 5px;
+}
+
+div.spec_line img.background {
+	width: 1024px;
+	height: 256px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+}
+
+div.spec_line div.spec_title {
+	position: absolute;
+	color: white;
+	text-shadow: 0 0 5px #000;
+	line-height: 136px;
+	left: 10px;
+	font-size: large;
+	font-style: oblique;
+}
+
+div.spec_line div.trait {
+	width: 160px;
+	position: absolute;
+	top: 32px;
+	color: white;
+	text-shadow: 0 0 5px #000;
+	text-align: center;
+}
+
+div.spec_line div.trait img {
+	width: 64px;
+	height: 64px;
+}

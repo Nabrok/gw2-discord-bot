@@ -1,27 +1,17 @@
 import React from 'react';
 import { Panel, Button, FormGroup, ControlLabel, FormControl, HelpBlock } from 'react-bootstrap';
-import Socket from '../services/WebSocket';
 import request from 'superagent';
 
+import Socket from '../services/WebSocket';
+import TokenStore from '../stores/TokenStore';
+import TokenActions from '../actions/TokenActions';
 
 class ShowKey extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			name: props.name,
-			permissions: props.permissions
-		}
-	}
-
-	componentWillReceiveProps(newProps) {
-		this.setState({ name: newProps.name, permissions: newProps.permissions });
-	}
-
 	render() {
 		return (
 			<div>
-				<p><b>{this.state.name}</b></p>
-				{ this.state.permissions && this.state.permissions.map(p => <span key={p}>{p} </span>) }
+				<p><b>{this.props.name}</b></p>
+				{ this.props.permissions && this.props.permissions.map(p => <span key={p}>{p} </span>) }
 			</div>
 		);
 	}
@@ -108,17 +98,30 @@ export default class ApiKey extends React.Component {
 	constructor() {
 		super();
 		this.keyChanged = this.keyChanged.bind(this);
-		this.state = {
+		this.state = Object.assign(this._getTokenState(), {
 			addingKey: false
-		};
+		});
 	}
 
-	componentWillMount() {
-		this.keyChanged();
+	_getTokenState() {
+		return TokenStore.token || {};
+	}
+
+	componentDidMount() {
+		this.changeListener = this._onChange.bind(this);
+		TokenStore.addChangeListener(this.changeListener);
+	}
+
+	componentWillUnmount() {
+		TokenStore.removeChangeListener(this.changeListener);
+	}
+
+	_onChange() {
+		this.setState(this._getTokenState());
 	}
 
 	keyChanged() {
-		Socket.send('get token').then(token => { this.setState(Object.assign(token, { addingKey: false })) });
+		this.setState({ addingKey: false });
 	}
 
 	render() {

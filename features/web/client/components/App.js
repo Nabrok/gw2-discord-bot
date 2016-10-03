@@ -35,16 +35,21 @@ export default class App extends React.Component {
 		return (
 			<div>
 				<Navbar>
-					<Navbar.Header><Navbar.Brand><Link to="/">Discord Guild Wars 2 Bot</Link></Navbar.Brand></Navbar.Header>
-					{ this.state.userLoggedIn && <Nav>
-						<LinkContainer to="/characters"><NavItem eventKey={1}>Characters</NavItem></LinkContainer>
-					</Nav> }
-					<Nav pullRight>
-						{ this.state.userLoggedIn && <NavDropdown eventKey={1} title={ this.state.user } id="user_dropdown">
-							<LinkContainer to="/api_key"><NavItem eventKey={1}>API Key</NavItem></LinkContainer>
-							<LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer>
-						</NavDropdown> }
-					</Nav>
+					<Navbar.Header>
+						<Navbar.Brand><Link to="/">Discord Guild Wars 2 Bot</Link></Navbar.Brand>
+						<Navbar.Toggle />
+					</Navbar.Header>
+					<Navbar.Collapse>
+						{ this.state.userLoggedIn && <Nav>
+							<LinkContainer to="/characters"><NavItem eventKey={1}>Characters</NavItem></LinkContainer>
+						</Nav> }
+						<Nav pullRight>
+							{ this.state.userLoggedIn && <NavDropdown eventKey={1} title={ this.state.user } id="user_dropdown">
+								<LinkContainer to="/api_key"><NavItem eventKey={1}>API Key</NavItem></LinkContainer>
+								<LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer>
+							</NavDropdown> }
+						</Nav>
+					</Navbar.Collapse>
 				</Navbar>
 				<div className="container">{this.props.children}</div>
 			</div>

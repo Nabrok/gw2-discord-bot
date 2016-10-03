@@ -15,6 +15,10 @@ class Socket {
 		return instance;
 	}
 
+	on(e, callback) {
+		this.socket.on(e, callback);
+	}
+
 	login(data) {
 		return new Promise((resolve, reject) => {
 			this.socket.emit('Login', data, (result) => {
