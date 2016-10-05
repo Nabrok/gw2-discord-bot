@@ -5,39 +5,104 @@ var
 	gw2 = Promise.promisifyAll(require('../lib/gw2'))
 ;
 
+function startTyping(channel) {
+	return new Promise((resolve, reject) => {
+		channel.startTyping(err => {
+			if (err) return reject(err);
+			resolve();
+		});
+	});
+}
+
 function messageReceived(message) {
 	var traits_cmd = new RegExp('^!('+phrases.get("BUILDS_BUILD")+') (.+?)(?:\\s+(pve|wvw|pvp))?$', 'i');
 	var equip_cmd = new RegExp('^!('+phrases.get("BUILDS_EQUIP")+') (.+)$', 'i');
-	var matches = message.content.match(traits_cmd) || message.content.match(equip_cmd);;
+	var privacy_cmd = new RegExp('!('+phrases.get("BUILDS_PRIVACY")+') (.+) (private|guild|public)$', 'i');
+	var matches = message.content.match(traits_cmd) || message.content.match(equip_cmd) || message.content.match(privacy_cmd);
 	if (! matches) return;
 	var cmd = matches[1];
-	var character = matches[2].trim();
+	var character = matches[2].replace(/<@\d+>/, "").trim();
+	if (cmd === phrases.get("BUILDS_PRIVACY")) {
+		var privacy = matches[3].toLowerCase();
+		startTyping(message.channel)
+			.then(() => Promise.all([
+				db.getUserKeyAsync(message.author.id)
+					.then(key => gw2.requestAsync('/v2/characters', key))
+					.then(characters => {
+						var name = characters.find(c => c.toLowerCase() === character.toLowerCase());
+						if (! name) throw new Error("no such character");
+						return name;
+					}),
+				db.getObjectAsync('privacy:'+message.author.id)
+			]))
+			.then(r => {
+				var name = r[0], p = r[1];
+				if (privacy === "private") p[name] = 1;
+				if (privacy === "guild")   p[name] = 2;
+				if (privacy === "public")  p[name] = 4;
+				return db.setObjectAsync('privacy:'+message.author.id, p);
+			})
+			.then(() => message.reply(phrases.get("BUILDS_PRIVACY_SET")))
+			.catch(err => {
+				if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
+				else {
+					message.reply(phrases.get("CORE_ERROR"));
+					console.error(err.stack);
+				}
+			})
+			.then(() => message.channel.stopTyping())
+		;
+		return;
+	}
+	var discord_id = message.author.id;
+	if (message.mentions && message.mentions.length === 1) discord_id = message.mentions[0].id;
 	var type = matches[3] || "pve"; // Default to PvE
 	type = type.toLowerCase();
 	var permissions_needed = ['characters'];
 	if (cmd === phrases.get("BUILDS_BUILD")) permissions_needed.push("builds");
 	if (cmd === phrases.get("BUILDS_EQUIP")) permissions_needed.push("inventories");
-	var preamble = new Promise((resolve, reject) => {
-			message.channel.startTyping(err => {
-				if (err) return reject(err);
-				resolve();
-			});
+	var preamble = startTyping(message.channel)
+		.then(() => {
+			if (message.mentions && message.mentions.length > 1) throw new Error("more than one mention");
 		})
-		.then(() => db.checkKeyPermissionAsync(message.author.id, permissions_needed))
-		.then(hasPerm => { if (! hasPerm) throw new Error("requires scope "+permissions_needed.join(" and ")); })
-		.then(() => db.getUserKeyAsync(message.author.id))
+		.then(() => db.getUserKeyAsync(discord_id))
 		.then(key => {
 			if (! key) throw new Error("endpoint requires authentication");
-			return gw2.requestAsync('/v2/characters', key)
+			return db.checkKeyPermissionAsync(discord_id, permissions_needed)
+				.then(hasPerm => {
+					if (! hasPerm) throw new Error("requires scope "+permissions_needed.join(" and "));
+					return gw2.requestAsync('/v2/characters', key);
+				})
 				.then(characters => {
 					// We want it to be case insensitive, so find the correct case for the name given
-					var name = characters.filter(c => c.toLowerCase() === character.toLowerCase())[0];
+					var name = characters.find(c => c.toLowerCase() === character.toLowerCase());
 					if (! name) throw new Error("no such character");
-					// Then request the specializations for that characetr
-					return gw2.requestAsync('/v2/characters/'+encodeURIComponent(name), key);
+					// If we're asking about ourselves, continue
+					if (message.author.id === discord_id) return { name, key };
+					// Check permissions if asking about somebody else
+					return db.getObjectAsync('privacy:'+discord_id)
+						.then(privacy => {
+							if (! privacy || ! privacy[name]) throw new Error("private");
+							if (privacy[name] === 1) throw new Error("private");
+							if (privacy[name] === 4) return { name, key }; // Public
+							// Guild members only
+							return db.getUserKeyAsync(message.author.id)
+								.then(author_key => Promise.all([
+									gw2.requestAsync('/v2/account', key),
+									gw2.requestAsync('/v2/account', author_key)
+								]))
+								.then(accounts => {
+									var match = accounts[0].guilds.some(g => accounts[1].guilds.indexOf(g) > -1);
+									if (! match) throw new Error("private");
+									return { name, key };
+								})
+							;
+						})
+					;
 				})
 			;
 		})
+		.then(d => gw2.requestAsync('/v2/characters/'+encodeURIComponent(d.name), d.key))
 	;
 	var makeString;
 	if (cmd === phrases.get("BUILDS_BUILD")) makeString = preamble
@@ -131,9 +196,11 @@ function messageReceived(message) {
 			if (scope) message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: scope[1] }));
 			else if (err.message === "endpoint requires authentication") message.reply(phrases.get("CORE_NO_KEY"));
 			else if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
+			else if (err.message === "more than one mention") message.reply(phrases.get("BUILDS_TOO_MANY_MENTIONS"));
+			else if (err.message === "private") message.reply(phrases.get("BUILDS_PRIVATE"));
 			else {
 				message.reply(phrases.get("CORE_ERROR"));
-				console.log(err.message);
+				console.error(err.stack);
 			}
 			return;
 		})

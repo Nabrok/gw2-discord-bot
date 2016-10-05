@@ -1,6 +1,7 @@
 {
 	"BUILDS_BUILD": "build",
 	"BUILDS_EQUIP": "equip",
+	"BUILDS_PRIVACY": "privacy",
 	"BUILDS_HELP": "**__Builds__**\n\n`!build [character_name] (pve|wvw|pvp)` - Show the character's specializations and traits for the given game mode.\n`!equip [character name]` - List the characters equipment.",
 	"BUILDS_NO_CHARACTER": "You do not have a character named \"%{name}\".",
 	"BUILDS_TRAITS": "Traits",
@@ -11,5 +12,8 @@
 	"BUILDS_ELITE": "Elite",
 	"BUILDS_ARMOR": "Armor",
 	"BUILDS_TRINKETS": "Trinkets",
-	"BUILDS_WEAPONS": "Weapons"
+	"BUILDS_WEAPONS": "Weapons",
+	"BUILDS_TOO_MANY_MENTIONS": "Please only mention one user.",
+	"BUILDS_PRIVATE": "Sorry, this users builds are private.",
+	"BUILDS_PRIVACY_SET": "Your build privacy settings have been updated."
 }
