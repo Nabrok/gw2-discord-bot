@@ -37,6 +37,7 @@ function messageReceived(message) {
 			]))
 			.then(r => {
 				var name = r[0], p = r[1];
+				if (! p) p = {};
 				if (privacy === "private") p[name] = 1;
 				if (privacy === "guild")   p[name] = 2;
 				if (privacy === "public")  p[name] = 4;
