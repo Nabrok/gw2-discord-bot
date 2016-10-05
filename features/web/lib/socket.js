@@ -9,6 +9,7 @@ var
 
 var jwt_secret = config.has('web.jwt_secret') ? config.get('web.jwt_secret') : config.get('discord.client_secret');
 
+var discord;
 var socketIdMap = {};
 
 var sub = db.subscribe("user_tokens:*");
@@ -128,6 +129,35 @@ function newConnection(socket) {
 		;
 	});
 
+	socket.on('get discord servers', (data, cb) => {
+		verifyJwt(data, socket)
+			.then(() => {
+				var servers = discord.servers.filter(s => s.members.find(m => m.id === data.user.id)).map(s => ({ id: s.id, name: s.name, icon: s.iconURL }));
+				console.log(servers);
+				return servers;
+			})
+			.then(servers => cb({ message: 'success', data: servers }))
+			.catch(err => cb({ error: err.message }))
+		;
+	});
+
+	socket.on('get discord channels', (data, cb) => {
+		verifyJwt(data, socket)
+			.then(() => {
+				var channels = discord.channels
+					.filter(c => c.type === 'text') // only interested in text channels
+					.filter(c => c.server.members.find(m => m.id === data.user.id)) // user is member of server
+					.filter(c => c.permissionsOf(data.user.id).hasPermission("sendMessages")) // must be able to send to channel
+					.map(c => ({ id: c.id, server: c.server.id, name: c.name, position: c.position }))
+				;
+				console.log(channels);
+				return channels;
+			})
+			.then(channels => cb({ message: 'success', data: channels }))
+			.catch(err => cb({ error: err.message }))
+		;
+	});
+
 	socket.on('disconnect', () => {
 		var userid = Object.keys(socketIdMap).find(i => Object.keys(socketIdMap[i]).some(s => s === socket.id));
 		if (! userid) return;
@@ -136,7 +166,8 @@ function newConnection(socket) {
 	});
 }
 
-module.exports = function(http) {
+module.exports = function(http, bot) {
+	discord = bot;
 	var io = require('socket.io')(http);
 	io.on('connection', newConnection);
 }

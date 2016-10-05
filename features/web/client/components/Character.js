@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert, Row, Col, Form, FormGroup, ControlLabel, FormControl, Radio, Panel, Popover, OverlayTrigger, Tabs, Tab, Nav, NavItem, Button, DropdownButton, MenuItem, Dropdown } from 'react-bootstrap';
 import { browserHistory, Link } from 'react-router';
+import PostToChannel from './partials/PostToChannel';
 
 import Socket from '../services/WebSocket';
 import TokenStore from '../stores/TokenStore';
@@ -185,6 +186,7 @@ class Traits extends React.Component {
 							</div>);
 						})}
 					</div>)})}
+				<PostToChannel />
 			</div>
 		);
 	}
