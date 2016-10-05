@@ -2,7 +2,7 @@
 	"BUILDS_BUILD": "build",
 	"BUILDS_EQUIP": "equip",
 	"BUILDS_PRIVACY": "privacy",
-	"BUILDS_HELP": "**__Builds__**\n\n`!build [character_name] (pve|wvw|pvp)` - Show the character's specializations and traits for the given game mode.\n`!equip [character name]` - List the characters equipment.",
+	"BUILDS_HELP": "**__Builds__**\n\n`!build [character_name] (pve|wvw|pvp)` - Show the character's specializations and traits for the given game mode.\n`!equip [character name]` - List the characters equipment.\n`!privacy [character name] (private|guild|public)` - Allow others to query your build with [character name] @mention",
 	"BUILDS_NO_CHARACTER": "You do not have a character named \"%{name}\".",
 	"BUILDS_TRAITS": "Traits",
 	"BUILDS_LEGENDS": "Legends",

@@ -45,6 +45,7 @@ This will reply with some personal progression related information for the user:
 
 * `!build [character name] [pve|wvw|pvp]` - Responds with your specialization and trait information for a specified character.  Specify the type of build at the end, if you leave this off it will default to PvE.
 * `!equip [character name]` - Responds with a listing of currently equiped pve/wvw gear.
+* `!private [character name] [private|guild|public]` - Allow or disallow others to query your build by including a mention after the character name.  Defaults to private for all characters.
 
 For example:
 
