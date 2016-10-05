@@ -3,7 +3,7 @@ var webpack = require('webpack');
 module.exports = {
 	entry: {
 		app: './features/web/client/index.js',
-		vendor: ['react', 'react-dom', 'flux', 'react-bootstrap', 'react-router', 'react-router-bootstrap', 'socket.io-client', 'superagent', 'jwt-decode']
+		vendor: ['react', 'react-dom', 'flux', 'react-bootstrap', 'react-router', 'react-router-bootstrap', 'socket.io-client', 'superagent', 'jwt-decode', 'react-markdown']
 	},
 	output: {
 		path: './features/web/public',
@@ -25,7 +25,8 @@ module.exports = {
 	],
 	module: {
 		loaders: [
-			{ test: /\.jsx?/, exclude: /node_modules/, loader: 'babel-loader?presets[]=es2015&presets[]=react' }
+			{ test: /\.jsx?/, exclude: /node_modules/, loader: 'babel-loader?presets[]=es2015&presets[]=react' },
+			{ test: /\.json$/, loader: 'json' }
 		]
 	}
 };

@@ -53,3 +53,17 @@ div.spec_line div.trait img {
 	width: 64px;
 	height: 64px;
 }
+
+div.discord_preview {
+	white-space: pre-wrap;
+	background-color: #444;
+	padding: 5px;
+	color: #ccc;
+}
+
+div.discord_preview code {
+	display: block;
+	background-color: #222;
+	border: 1px solid black;
+	color: #888;
+}

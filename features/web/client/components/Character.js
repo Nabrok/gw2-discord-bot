@@ -186,7 +186,7 @@ class Traits extends React.Component {
 							</div>);
 						})}
 					</div>)})}
-				<PostToChannel />
+				<PostToChannel cmd="build string" data={{ name: this.props.character.name, type: this.props.type }} />
 			</div>
 		);
 	}
@@ -419,6 +419,8 @@ class Skills extends React.Component {
 					<img src={skill.icon} style={{ width: '64px', height: '64px' }} />
 				</OverlayTrigger>)}
 			</div>)}
+			<br/>
+			<PostToChannel cmd="build string" data={{ name: this.props.character.name, type: this.props.type }} />
 		</div>);
 	}
 }
@@ -466,7 +468,7 @@ class Equipment extends React.Component {
 			return t;
 		}, {}) : {};
 		this._myItems = [];
-		return (<Row>
+		return (<div><Row>
 			<Col sm={4}>
 				<Panel header="Armor">
 					{ ['Helm', 'Shoulders', 'Coat', 'Gloves', 'Leggings', 'Boots'].filter(slot => !!gear_hash[slot]).map(slot => <Item key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
@@ -484,7 +486,10 @@ class Equipment extends React.Component {
 					{ ['WeaponB1', 'WeaponB2'].filter(slot => !!gear_hash[slot]).map(slot => <Item key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
 				</Panel>
 			</Col>
-		</Row>)
+		</Row>
+		<Row>
+			<PostToChannel cmd="equip string" data={{ name: this.props.character.name }} />
+		</Row></div>)
 	}
 }
 

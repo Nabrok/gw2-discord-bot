@@ -1888,35 +1888,35 @@ webpackJsonp([0],{
 	
 	var _PrivacyStore2 = _interopRequireDefault(_PrivacyStore);
 	
-	var _ItemStore = __webpack_require__(/*! ../stores/ItemStore */ 572);
+	var _ItemStore = __webpack_require__(/*! ../stores/ItemStore */ 598);
 	
 	var _ItemStore2 = _interopRequireDefault(_ItemStore);
 	
-	var _StatsStore = __webpack_require__(/*! ../stores/StatsStore */ 575);
+	var _StatsStore = __webpack_require__(/*! ../stores/StatsStore */ 601);
 	
 	var _StatsStore2 = _interopRequireDefault(_StatsStore);
 	
-	var _SkinsStore = __webpack_require__(/*! ../stores/SkinsStore */ 577);
+	var _SkinsStore = __webpack_require__(/*! ../stores/SkinsStore */ 603);
 	
 	var _SkinsStore2 = _interopRequireDefault(_SkinsStore);
 	
-	var _SpecializationStore = __webpack_require__(/*! ../stores/SpecializationStore */ 579);
+	var _SpecializationStore = __webpack_require__(/*! ../stores/SpecializationStore */ 605);
 	
 	var _SpecializationStore2 = _interopRequireDefault(_SpecializationStore);
 	
-	var _TraitStore = __webpack_require__(/*! ../stores/TraitStore */ 581);
+	var _TraitStore = __webpack_require__(/*! ../stores/TraitStore */ 607);
 	
 	var _TraitStore2 = _interopRequireDefault(_TraitStore);
 	
-	var _ProfessionStore = __webpack_require__(/*! ../stores/ProfessionStore */ 583);
+	var _ProfessionStore = __webpack_require__(/*! ../stores/ProfessionStore */ 609);
 	
 	var _ProfessionStore2 = _interopRequireDefault(_ProfessionStore);
 	
-	var _SkillStore = __webpack_require__(/*! ../stores/SkillStore */ 585);
+	var _SkillStore = __webpack_require__(/*! ../stores/SkillStore */ 611);
 	
 	var _SkillStore2 = _interopRequireDefault(_SkillStore);
 	
-	var _LegendStore = __webpack_require__(/*! ../stores/LegendStore */ 587);
+	var _LegendStore = __webpack_require__(/*! ../stores/LegendStore */ 613);
 	
 	var _LegendStore2 = _interopRequireDefault(_LegendStore);
 	
@@ -2184,7 +2184,7 @@ webpackJsonp([0],{
 							})
 						);
 					}),
-					_react2.default.createElement(_PostToChannel2.default, null)
+					_react2.default.createElement(_PostToChannel2.default, { cmd: 'build string', data: { name: this.props.character.name, type: this.props.type } })
 				);
 			}
 		}]);
@@ -2530,7 +2530,9 @@ webpackJsonp([0],{
 								);
 							})
 						);
-					})
+					}),
+					_react2.default.createElement('br', null),
+					_react2.default.createElement(_PostToChannel2.default, { cmd: 'build string', data: { name: this.props.character.name, type: this.props.type } })
 				);
 			}
 		}]);
@@ -2608,60 +2610,69 @@ webpackJsonp([0],{
 				}, {}) : {};
 				this._myItems = [];
 				return _react2.default.createElement(
-					_reactBootstrap.Row,
+					'div',
 					null,
 					_react2.default.createElement(
-						_reactBootstrap.Col,
-						{ sm: 4 },
+						_reactBootstrap.Row,
+						null,
 						_react2.default.createElement(
-							_reactBootstrap.Panel,
-							{ header: 'Armor' },
-							['Helm', 'Shoulders', 'Coat', 'Gloves', 'Leggings', 'Boots'].filter(function (slot) {
-								return !!gear_hash[slot];
-							}).map(function (slot) {
-								return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
-										_this7._myItems.push(i);
-									} });
-							})
+							_reactBootstrap.Col,
+							{ sm: 4 },
+							_react2.default.createElement(
+								_reactBootstrap.Panel,
+								{ header: 'Armor' },
+								['Helm', 'Shoulders', 'Coat', 'Gloves', 'Leggings', 'Boots'].filter(function (slot) {
+									return !!gear_hash[slot];
+								}).map(function (slot) {
+									return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
+											_this7._myItems.push(i);
+										} });
+								})
+							)
+						),
+						_react2.default.createElement(
+							_reactBootstrap.Col,
+							{ sm: 4 },
+							_react2.default.createElement(
+								_reactBootstrap.Panel,
+								{ header: 'Trinkets' },
+								['Backpack', 'Accessory1', 'Accessory2', 'Amulet', 'Ring1', 'Ring2'].filter(function (slot) {
+									return !!gear_hash[slot];
+								}).map(function (slot) {
+									return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
+											_this7._myItems.push(i);
+										} });
+								})
+							)
+						),
+						_react2.default.createElement(
+							_reactBootstrap.Col,
+							{ sm: 4 },
+							_react2.default.createElement(
+								_reactBootstrap.Panel,
+								{ header: 'Weapons' },
+								['WeaponA1', 'WeaponA2'].filter(function (slot) {
+									return !!gear_hash[slot];
+								}).map(function (slot) {
+									return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
+											_this7._myItems.push(i);
+										} });
+								}),
+								_react2.default.createElement('br', null),
+								['WeaponB1', 'WeaponB2'].filter(function (slot) {
+									return !!gear_hash[slot];
+								}).map(function (slot) {
+									return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
+											_this7._myItems.push(i);
+										} });
+								})
+							)
 						)
 					),
 					_react2.default.createElement(
-						_reactBootstrap.Col,
-						{ sm: 4 },
-						_react2.default.createElement(
-							_reactBootstrap.Panel,
-							{ header: 'Trinkets' },
-							['Backpack', 'Accessory1', 'Accessory2', 'Amulet', 'Ring1', 'Ring2'].filter(function (slot) {
-								return !!gear_hash[slot];
-							}).map(function (slot) {
-								return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
-										_this7._myItems.push(i);
-									} });
-							})
-						)
-					),
-					_react2.default.createElement(
-						_reactBootstrap.Col,
-						{ sm: 4 },
-						_react2.default.createElement(
-							_reactBootstrap.Panel,
-							{ header: 'Weapons' },
-							['WeaponA1', 'WeaponA2'].filter(function (slot) {
-								return !!gear_hash[slot];
-							}).map(function (slot) {
-								return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
-										_this7._myItems.push(i);
-									} });
-							}),
-							_react2.default.createElement('br', null),
-							['WeaponB1', 'WeaponB2'].filter(function (slot) {
-								return !!gear_hash[slot];
-							}).map(function (slot) {
-								return _react2.default.createElement(Item, { key: slot, data: gear_hash[slot], ref: function ref(i) {
-										_this7._myItems.push(i);
-									} });
-							})
-						)
+						_reactBootstrap.Row,
+						null,
+						_react2.default.createElement(_PostToChannel2.default, { cmd: 'equip string', data: { name: this.props.character.name } })
 					)
 				);
 			}
@@ -2922,11 +2933,19 @@ webpackJsonp([0],{
 	
 	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 236);
 	
-	var _DiscordServerStore = __webpack_require__(/*! ../../stores/DiscordServerStore */ 568);
+	var _reactMarkdown = __webpack_require__(/*! react-markdown */ 568);
+	
+	var _reactMarkdown2 = _interopRequireDefault(_reactMarkdown);
+	
+	var _WebSocket = __webpack_require__(/*! ../../services/WebSocket */ 500);
+	
+	var _WebSocket2 = _interopRequireDefault(_WebSocket);
+	
+	var _DiscordServerStore = __webpack_require__(/*! ../../stores/DiscordServerStore */ 594);
 	
 	var _DiscordServerStore2 = _interopRequireDefault(_DiscordServerStore);
 	
-	var _DiscordChannelStore = __webpack_require__(/*! ../../stores/DiscordChannelStore */ 570);
+	var _DiscordChannelStore = __webpack_require__(/*! ../../stores/DiscordChannelStore */ 596);
 	
 	var _DiscordChannelStore2 = _interopRequireDefault(_DiscordChannelStore);
 	
@@ -2948,13 +2967,17 @@ webpackJsonp([0],{
 	
 			_this._open = _this._open.bind(_this);
 			_this._close = _this._close.bind(_this);
+			_this._getPreview = _this._getPreview.bind(_this);
 	
+			_this._getPreview(props.cmd, props.data);
 			var servers = _this._getServers();
 			_this.state = {
 				showModal: false,
 				servers: _this._getServers(),
 				channels: [],
-				selectedServer: ''
+				selectedServer: '',
+				selectedChannel: '',
+				preview: ''
 			};
 			if (servers.length === 1) {
 				_this.state.selectedServer = servers[0].id;
@@ -2964,6 +2987,11 @@ webpackJsonp([0],{
 		}
 	
 		_createClass(PostToChannel, [{
+			key: 'componentWillReceiveProps',
+			value: function componentWillReceiveProps(newProps) {
+				this._getPreview(newProps.cmd, newProps.data);
+			}
+		}, {
 			key: '_open',
 			value: function _open() {
 				this.setState({ showModal: true });
@@ -2984,11 +3012,36 @@ webpackJsonp([0],{
 				return _DiscordChannelStore2.default.serverChannels(server);
 			}
 		}, {
+			key: '_getPreview',
+			value: function _getPreview(cmd, data) {
+				var _this2 = this;
+	
+				_WebSocket2.default.send("get " + cmd, data).then(function (preview) {
+					_this2.setState({ preview: preview });
+				});
+			}
+		}, {
 			key: '_serverChange',
 			value: function _serverChange(e) {
 				var selectedServer = e.target.value;
 				var channels = this._getChannels(selectedServer);
 				this.setState({ selectedServer: selectedServer, channels: channels });
+			}
+		}, {
+			key: '_channelChange',
+			value: function _channelChange(e) {
+				var selectedChannel = e.target.value;
+				this.setState({ selectedChannel: selectedChannel });
+			}
+		}, {
+			key: '_post',
+			value: function _post() {
+				var _this3 = this;
+	
+				var data = Object.assign(this.props.data, { channel: this.state.selectedChannel });
+				_WebSocket2.default.send("post " + this.props.cmd, data).then(function () {
+					_this3.setState({ showModal: false });
+				});
 			}
 		}, {
 			key: 'render',
@@ -3042,7 +3095,7 @@ webpackJsonp([0],{
 								),
 								this.state.selectedServer && _react2.default.createElement(
 									_reactBootstrap.FormGroup,
-									{ controlId: 'channelSelect' },
+									{ controlId: 'channelSelect', value: this.state.selectedChannel, onChange: this._channelChange.bind(this) },
 									_react2.default.createElement(
 										_reactBootstrap.ControlLabel,
 										null,
@@ -3061,6 +3114,20 @@ webpackJsonp([0],{
 										})
 									)
 								)
+							),
+							_react2.default.createElement(
+								'div',
+								{ className: 'discord_preview' },
+								_react2.default.createElement(_reactMarkdown2.default, { source: this.state.preview })
+							)
+						),
+						_react2.default.createElement(
+							_reactBootstrap.Modal.Footer,
+							null,
+							_react2.default.createElement(
+								_reactBootstrap.Button,
+								{ bsStyle: 'primary', disabled: !this.state.selectedChannel, onClick: this._post.bind(this) },
+								'Post'
 							)
 						)
 					)
@@ -3075,7 +3142,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 568:
+/***/ 594:
 /*!**********************************************************!*\
   !*** ./features/web/client/stores/DiscordServerStore.js ***!
   \**********************************************************/
@@ -3101,7 +3168,7 @@ webpackJsonp([0],{
 	
 	var _LoginStore2 = _interopRequireDefault(_LoginStore);
 	
-	var _DiscordServerActions = __webpack_require__(/*! ../actions/DiscordServerActions */ 569);
+	var _DiscordServerActions = __webpack_require__(/*! ../actions/DiscordServerActions */ 595);
 	
 	var _DiscordServerActions2 = _interopRequireDefault(_DiscordServerActions);
 	
@@ -3165,7 +3232,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 569:
+/***/ 595:
 /*!*************************************************************!*\
   !*** ./features/web/client/actions/DiscordServerActions.js ***!
   \*************************************************************/
@@ -3191,7 +3258,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 570:
+/***/ 596:
 /*!***********************************************************!*\
   !*** ./features/web/client/stores/DiscordChannelStore.js ***!
   \***********************************************************/
@@ -3217,7 +3284,7 @@ webpackJsonp([0],{
 	
 	var _LoginStore2 = _interopRequireDefault(_LoginStore);
 	
-	var _DiscordChannelActions = __webpack_require__(/*! ../actions/DiscordChannelActions */ 571);
+	var _DiscordChannelActions = __webpack_require__(/*! ../actions/DiscordChannelActions */ 597);
 	
 	var _DiscordChannelActions2 = _interopRequireDefault(_DiscordChannelActions);
 	
@@ -3288,7 +3355,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 571:
+/***/ 597:
 /*!**************************************************************!*\
   !*** ./features/web/client/actions/DiscordChannelActions.js ***!
   \**************************************************************/
@@ -3314,7 +3381,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 572:
+/***/ 598:
 /*!*************************************************!*\
   !*** ./features/web/client/stores/ItemStore.js ***!
   \*************************************************/
@@ -3332,11 +3399,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _ItemActions = __webpack_require__(/*! ../actions/ItemActions */ 574);
+	var _ItemActions = __webpack_require__(/*! ../actions/ItemActions */ 600);
 	
 	var _ItemActions2 = _interopRequireDefault(_ItemActions);
 	
@@ -3402,7 +3469,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 573:
+/***/ 599:
 /*!************************************************!*\
   !*** ./features/web/client/services/Gw2Api.js ***!
   \************************************************/
@@ -3474,7 +3541,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 574:
+/***/ 600:
 /*!****************************************************!*\
   !*** ./features/web/client/actions/ItemActions.js ***!
   \****************************************************/
@@ -3500,7 +3567,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 575:
+/***/ 601:
 /*!**************************************************!*\
   !*** ./features/web/client/stores/StatsStore.js ***!
   \**************************************************/
@@ -3518,11 +3585,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _StatsActions = __webpack_require__(/*! ../actions/StatsActions */ 576);
+	var _StatsActions = __webpack_require__(/*! ../actions/StatsActions */ 602);
 	
 	var _StatsActions2 = _interopRequireDefault(_StatsActions);
 	
@@ -3596,7 +3663,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 576:
+/***/ 602:
 /*!*****************************************************!*\
   !*** ./features/web/client/actions/StatsActions.js ***!
   \*****************************************************/
@@ -3622,7 +3689,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 577:
+/***/ 603:
 /*!**************************************************!*\
   !*** ./features/web/client/stores/SkinsStore.js ***!
   \**************************************************/
@@ -3640,11 +3707,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _SkinsActions = __webpack_require__(/*! ../actions/SkinsActions */ 578);
+	var _SkinsActions = __webpack_require__(/*! ../actions/SkinsActions */ 604);
 	
 	var _SkinsActions2 = _interopRequireDefault(_SkinsActions);
 	
@@ -3710,7 +3777,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 578:
+/***/ 604:
 /*!*****************************************************!*\
   !*** ./features/web/client/actions/SkinsActions.js ***!
   \*****************************************************/
@@ -3736,7 +3803,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 579:
+/***/ 605:
 /*!***********************************************************!*\
   !*** ./features/web/client/stores/SpecializationStore.js ***!
   \***********************************************************/
@@ -3754,11 +3821,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _SpecializationActions = __webpack_require__(/*! ../actions/SpecializationActions */ 580);
+	var _SpecializationActions = __webpack_require__(/*! ../actions/SpecializationActions */ 606);
 	
 	var _SpecializationActions2 = _interopRequireDefault(_SpecializationActions);
 	
@@ -3824,7 +3891,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 580:
+/***/ 606:
 /*!**************************************************************!*\
   !*** ./features/web/client/actions/SpecializationActions.js ***!
   \**************************************************************/
@@ -3850,7 +3917,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 581:
+/***/ 607:
 /*!**************************************************!*\
   !*** ./features/web/client/stores/TraitStore.js ***!
   \**************************************************/
@@ -3868,11 +3935,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _TraitActions = __webpack_require__(/*! ../actions/TraitActions */ 582);
+	var _TraitActions = __webpack_require__(/*! ../actions/TraitActions */ 608);
 	
 	var _TraitActions2 = _interopRequireDefault(_TraitActions);
 	
@@ -3938,7 +4005,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 582:
+/***/ 608:
 /*!*****************************************************!*\
   !*** ./features/web/client/actions/TraitActions.js ***!
   \*****************************************************/
@@ -3964,7 +4031,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 583:
+/***/ 609:
 /*!*******************************************************!*\
   !*** ./features/web/client/stores/ProfessionStore.js ***!
   \*******************************************************/
@@ -3982,11 +4049,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _ProfessionActions = __webpack_require__(/*! ../actions/ProfessionActions */ 584);
+	var _ProfessionActions = __webpack_require__(/*! ../actions/ProfessionActions */ 610);
 	
 	var _ProfessionActions2 = _interopRequireDefault(_ProfessionActions);
 	
@@ -4053,7 +4120,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 584:
+/***/ 610:
 /*!**********************************************************!*\
   !*** ./features/web/client/actions/ProfessionActions.js ***!
   \**********************************************************/
@@ -4079,7 +4146,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 585:
+/***/ 611:
 /*!**************************************************!*\
   !*** ./features/web/client/stores/SkillStore.js ***!
   \**************************************************/
@@ -4097,11 +4164,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _SkillActions = __webpack_require__(/*! ../actions/SkillActions */ 586);
+	var _SkillActions = __webpack_require__(/*! ../actions/SkillActions */ 612);
 	
 	var _SkillActions2 = _interopRequireDefault(_SkillActions);
 	
@@ -4168,7 +4235,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 586:
+/***/ 612:
 /*!*****************************************************!*\
   !*** ./features/web/client/actions/SkillActions.js ***!
   \*****************************************************/
@@ -4194,7 +4261,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 587:
+/***/ 613:
 /*!***************************************************!*\
   !*** ./features/web/client/stores/LegendStore.js ***!
   \***************************************************/
@@ -4212,11 +4279,11 @@ webpackJsonp([0],{
 	
 	var _BaseStore3 = _interopRequireDefault(_BaseStore2);
 	
-	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 573);
+	var _Gw2Api = __webpack_require__(/*! ../services/Gw2Api */ 599);
 	
 	var _Gw2Api2 = _interopRequireDefault(_Gw2Api);
 	
-	var _LegendActions = __webpack_require__(/*! ../actions/LegendActions */ 588);
+	var _LegendActions = __webpack_require__(/*! ../actions/LegendActions */ 614);
 	
 	var _LegendActions2 = _interopRequireDefault(_LegendActions);
 	
@@ -4283,7 +4350,7 @@ webpackJsonp([0],{
 
 /***/ },
 
-/***/ 588:
+/***/ 614:
 /*!******************************************************!*\
   !*** ./features/web/client/actions/LegendActions.js ***!
   \******************************************************/

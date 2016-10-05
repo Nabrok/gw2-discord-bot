@@ -133,13 +133,59 @@ function newConnection(socket) {
 		verifyJwt(data, socket)
 			.then(() => {
 				var servers = discord.servers.filter(s => s.members.find(m => m.id === data.user.id)).map(s => ({ id: s.id, name: s.name, icon: s.iconURL }));
-				console.log(servers);
 				return servers;
 			})
 			.then(servers => cb({ message: 'success', data: servers }))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
+
+	socket.on('get build string', (data, cb) => {
+		verifyJwt(data, socket)
+			.then(() => db.getUserKeyAsync(data.user.id))
+			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(character => require('../../builds').getBuildString(character, data.data.type))
+			.then(string => cb({ message: 'success', data: string }))
+			.catch(err => cb({ error: err.message }))
+	});
+
+	socket.on('post build string', (data, cb) => {
+		verifyJwt(data, socket)
+			.then(() => db.getUserKeyAsync(data.user.id))
+			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(character => require('../../builds').getBuildString(character, data.data.type))
+			.then(string => {
+				var channel = discord.channels.get("id", data.data.channel);
+				if (! channel) throw new Error("no such channel");
+				channel.sendMessage(string);
+			})
+			.then(() => cb({ message: 'success' }))
+			.catch(err => cb({ error: err.message }))
+	});
+
+	socket.on('get equip string', (data, cb) => {
+		verifyJwt(data, socket)
+			.then(() => db.getUserKeyAsync(data.user.id))
+			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(character => require('../../builds').getEquipString(character))
+			.then(string => cb({ message: 'success', data: string }))
+			.catch(err => cb({ error: err.message }))
+	});
+
+	socket.on('post equip string', (data, cb) => {
+		verifyJwt(data, socket)
+			.then(() => db.getUserKeyAsync(data.user.id))
+			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(character => require('../../builds').getEquipString(character, data.data.type))
+			.then(string => {
+				var channel = discord.channels.get("id", data.data.channel);
+				if (! channel) throw new Error("no such channel");
+				channel.sendMessage(string);
+			})
+			.then(() => cb({ message: 'success' }))
+			.catch(err => cb({ error: err.message }))
+	});
+
 
 	socket.on('get discord channels', (data, cb) => {
 		verifyJwt(data, socket)
@@ -150,7 +196,6 @@ function newConnection(socket) {
 					.filter(c => c.permissionsOf(data.user.id).hasPermission("sendMessages")) // must be able to send to channel
 					.map(c => ({ id: c.id, server: c.server.id, name: c.name, position: c.position }))
 				;
-				console.log(channels);
 				return channels;
 			})
 			.then(channels => cb({ message: 'success', data: channels }))

@@ -1,5 +1,8 @@
 import React from 'react';
 import { Button, Modal, FormGroup, ControlLabel, FormControl } from 'react-bootstrap';
+import ReactMarkdown from 'react-markdown';
+
+import Socket from '../../services/WebSocket';
 
 import DiscordServerStore from '../../stores/DiscordServerStore';
 import DiscordChannelStore from '../../stores/DiscordChannelStore';
@@ -10,18 +13,26 @@ export default class PostToChannel extends React.Component {
 
 		this._open = this._open.bind(this);
 		this._close = this._close.bind(this);
+		this._getPreview = this._getPreview.bind(this);
 
+		this._getPreview(props.cmd, props.data);
 		var servers = this._getServers();
 		this.state = {
 			showModal: false,
 			servers: this._getServers(),
 			channels: [],
-			selectedServer: ''
+			selectedServer: '',
+			selectedChannel: '',
+			preview: ''
 		};
 		if (servers.length === 1) {
 			this.state.selectedServer = servers[0].id;
 			this.state.channels = this._getChannels(servers[0].id);
 		}
+	}
+
+	componentWillReceiveProps(newProps) {
+		this._getPreview(newProps.cmd, newProps.data);
 	}
 
 	_open() {
@@ -40,10 +51,28 @@ export default class PostToChannel extends React.Component {
 		return DiscordChannelStore.serverChannels(server);
 	}
 
+	_getPreview(cmd, data) {
+		Socket.send("get "+cmd, data)
+			.then(preview => {
+				this.setState({ preview });
+			})
+		;
+	}
+
 	_serverChange(e) {
 		var selectedServer = e.target.value;
 		var channels = this._getChannels(selectedServer);
 		this.setState({ selectedServer, channels });
+	}
+
+	_channelChange(e) {
+		var selectedChannel = e.target.value;
+		this.setState({ selectedChannel });
+	}
+
+	_post() {
+		var data = Object.assign(this.props.data, { channel: this.state.selectedChannel });
+		Socket.send("post "+this.props.cmd, data).then(() => { this.setState({ showModal: false }); });
 	}
 
 	render() {
@@ -62,7 +91,7 @@ export default class PostToChannel extends React.Component {
 								{this.state.servers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
 							</FormControl>
 						</FormGroup> }
-						{ this.state.selectedServer && <FormGroup controlId="channelSelect">
+						{ this.state.selectedServer && <FormGroup controlId="channelSelect" value={this.state.selectedChannel} onChange={this._channelChange.bind(this)}>
 							<ControlLabel>Channel</ControlLabel>
 							<FormControl componentClass="select" placeholder="Channel">
 								<option value=""></option>
@@ -70,7 +99,11 @@ export default class PostToChannel extends React.Component {
 							</FormControl>
 						</FormGroup> }
 					</form>
+					<div className="discord_preview"><ReactMarkdown source={this.state.preview} /></div>
 				</Modal.Body>
+				<Modal.Footer>
+					<Button bsStyle="primary" disabled={!this.state.selectedChannel} onClick={this._post.bind(this)}>Post</Button>
+				</Modal.Footer>
 			</Modal>
 		</div>);
 	}
