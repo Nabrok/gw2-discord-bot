@@ -36,7 +36,7 @@ export default class PostToChannel extends React.Component {
 	}
 
 	_open() {
-		this.setState({ showModal: true });
+		this.setState({ showModal: true, selectedChannel: '' });
 	}
 
 	_close() {
@@ -72,7 +72,7 @@ export default class PostToChannel extends React.Component {
 
 	_post() {
 		var data = Object.assign(this.props.data, { channel: this.state.selectedChannel });
-		Socket.send("post "+this.props.cmd, data).then(() => { this.setState({ showModal: false }); });
+		Socket.send("post "+this.props.cmd, data).then(() => this._close());
 	}
 
 	render() {
