@@ -9,7 +9,7 @@ class DiscordServerStore extends BaseStore {
 		super();
 		this.subscribe(() => this._registerToActions.bind(this));
 
-		Socket.on('new discord channel', DiscordServerActions.receive);
+		Socket.on('new discord servers', DiscordServerActions.receive);
 
 		this._servers = [];
 	}

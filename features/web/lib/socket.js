@@ -42,6 +42,59 @@ sub.on("pmessage", (pattern, channel, message) => {
 	}
 });
 
+function updateServers() {
+	var users = Object.keys(socketIdMap);
+	if (users.length === 0) return;
+	setTimeout(() => {
+		users.forEach(uid => {
+			var servers = getCommonServers(uid);
+			var sockets = socketIdMap[uid];
+			Object.keys(sockets).forEach(sid => sockets[sid].emit('new discord servers', servers));
+		});
+	}, 500);
+}
+
+function updateChannels() {
+	var users = Object.keys(socketIdMap);
+	if (users.length === 0) return;
+	setTimeout(() => {
+		users.forEach(uid => {
+			var channels = getCommonChannels(uid);
+			var sockets = socketIdMap[uid];
+			Object.keys(sockets).forEach(sid => sockets[sid].emit('new discord channels', channels));
+		});
+	}, 500);
+}
+
+function updateServerChannels(server, user) {
+	var sockets = socketIdMap[user.id];
+	if (! sockets) return;
+	setTimeout(() => {
+		var servers = getCommonServers(user.id);
+		var channels = getCommonChannels(user.id);
+		Object.keys(sockets).forEach(sid => {
+			sockets[sid].emit('new discord servers', servers);
+			sockets[sid].emit('new discord channels', channels);
+		});
+	}, 500);
+}
+
+function getCommonServers(userid) {
+	return discord.servers
+		.filter(s => s.members.find(m => m.id === userid))
+		.map(s => ({ id: s.id, name: s.name, icon: s.iconURL }))
+	;
+}
+
+function getCommonChannels(userid) {
+	return discord.channels
+		.filter(c => c.type === 'text') // only interested in text channels
+		.filter(c => c.server.members.find(m => m.id === userid)) // user is member of server
+		.filter(c => c.permissionsOf(userid).hasPermission("sendMessages")) // must be able to send to channel
+		.map(c => ({ id: c.id, server: c.server.id, name: c.name, position: c.position }))
+	;
+}
+
 function verifyJwt(data, socket) {
 	return nJwt.verifyAsync(data.jwt, jwt_secret).then(verifiedJwt => {
 		data.jwt = verifiedJwt;
@@ -131,10 +184,7 @@ function newConnection(socket) {
 
 	socket.on('get discord servers', (data, cb) => {
 		verifyJwt(data, socket)
-			.then(() => {
-				var servers = discord.servers.filter(s => s.members.find(m => m.id === data.user.id)).map(s => ({ id: s.id, name: s.name, icon: s.iconURL }));
-				return servers;
-			})
+			.then(() => getCommonServers(data.user.id))
 			.then(servers => cb({ message: 'success', data: servers }))
 			.catch(err => cb({ error: err.message }))
 		;
@@ -189,15 +239,7 @@ function newConnection(socket) {
 
 	socket.on('get discord channels', (data, cb) => {
 		verifyJwt(data, socket)
-			.then(() => {
-				var channels = discord.channels
-					.filter(c => c.type === 'text') // only interested in text channels
-					.filter(c => c.server.members.find(m => m.id === data.user.id)) // user is member of server
-					.filter(c => c.permissionsOf(data.user.id).hasPermission("sendMessages")) // must be able to send to channel
-					.map(c => ({ id: c.id, server: c.server.id, name: c.name, position: c.position }))
-				;
-				return channels;
-			})
+			.then(() => getCommonChannels(data.user.id))
 			.then(channels => cb({ message: 'success', data: channels }))
 			.catch(err => cb({ error: err.message }))
 		;
@@ -215,4 +257,16 @@ module.exports = function(http, bot) {
 	discord = bot;
 	var io = require('socket.io')(http);
 	io.on('connection', newConnection);
+
+	bot.on("serverCreated", updateServers);
+	bot.on("serverUpdated", updateServers);
+	bot.on("serverDeleted", updateServers);
+
+	bot.on("channelCreated", updateChannels);
+	bot.on("channelUpdated", updateChannels);
+	bot.on("channelDeleted", updateChannels);
+
+	bot.on("serverNewMember", updateServerChannels);
+	bot.on("serverMemberRemoved", updateServerChannels);
+	bot.on("serverMemberUpdated", updateServerChannels);
 }

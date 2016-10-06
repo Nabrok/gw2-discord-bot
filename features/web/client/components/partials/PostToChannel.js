@@ -35,6 +35,27 @@ export default class PostToChannel extends React.Component {
 		this._getPreview(newProps.cmd, newProps.data);
 	}
 
+	componentDidMount() {
+		this._discordServersListener = this._serversUpdated.bind(this);
+		this._discordChannelsListener = this._channelsUpdated.bind(this);
+		DiscordServerStore.addChangeListener(this._discordServersListener);
+		DiscordChannelStore.addChangeListener(this._discordChannelsListener);
+	}
+
+	componentWillUnmount() {
+		DiscordServerStore.removeChangeListener(this._discordServersListener);
+		DiscordChannelStore.removeChangeListener(this._discordChannelsListener);
+	}
+
+	_serversUpdated() {
+		this.setState({ servers: this._getServers() });
+	}
+
+	_channelsUpdated() {
+		if (! this.state.selectedServer) return;
+		this.setState({ channels: this._getChannels(this.state.selectedServer) });
+	}
+
 	_open() {
 		this.setState({ showModal: true, selectedChannel: '' });
 	}
