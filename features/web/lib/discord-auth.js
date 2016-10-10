@@ -9,6 +9,7 @@ var client_secret = config.get('discord.client_secret');
 var protocol = config.has('web.protocol') ? config.get('web.protocol') : 'http';
 var http_port = config.get('web.port');
 var domain = config.get('web.domain');
+var public_url = config.has('web.public_url') ? config.get('web.public_url') : protocol+"://"+domain+(((protocol === "http" && port !== "80") || (protocol === "https" && port !== "443")) ? ":"+port : "");
 
 var auth = {};
 
@@ -17,7 +18,7 @@ auth.client = new ClientOAuth2({
 	clientSecret: client_secret,
 	accessTokenUri: 'https://discordapp.com/api/oauth2/token',
 	authorizationUri: 'https://discordapp.com/api/oauth2/authorize',
-	redirectUri: protocol + '://' + domain + ':' + http_port + '/auth',
+	redirectUri: public_url + '/auth',
 	scopes: ['identify']
 });
 
