@@ -25,11 +25,14 @@ motd_excluded_subdomains = [ # An array of url subdomains of which the url shoul
 clientid = "" # Used to generate a link to add the bot to a server
 token = "" # Token for your discord bot user
 
+# The "web" feature is disabled by default, enabling it adds a webs server which allows users to login and view more detailed reports and configure some options.
 [web]
 domain = "127.0.0.1"
 protocol = "http"
 port = "3000"
+#public_url = "https://mydomain.com/" # Use this for the public url if behind a proxy (such as nginx)
 
 [features]
 language = "en"
-enabled = ["ranks", "motd", "wvw_score", "progression", "builds", "wiki", "session", "whois", "web"]
+# Add "web" to turn on the web server
+enabled = ["ranks", "motd", "wvw_score", "progression", "builds", "wiki", "session", "whois"]
