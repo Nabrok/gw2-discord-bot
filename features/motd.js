@@ -38,7 +38,8 @@ module.exports = function(bot) {
 	}
 
 	// Update motd every time the guild log is requested
-	gw2.addHook('/v2/guild/'+guild_id+'/log', function(log, key, next_hook) {
+	gw2.on('/v2/guild/'+guild_id+'/log', (log, key, from_cache) => {
+		if (from_cache) return;
 		var motd = log.filter(l => (l.type === 'motd'))[0];
 		var time = new Date(motd.time);
 		var text = motd.motd + "\n\n- "+motd.user+"\n"+time.toDateString();
@@ -63,9 +64,7 @@ module.exports = function(bot) {
 		}
 
 		var channels = bot.channels.getAll('name', channel_name);
-		async.each(channels, function(channel, next_channel) {
-			bot.setChannelTopic(channel, text, next_channel);
-		}, next_hook);
+		channels.forEach(channel => bot.setChannelTopic(channel, text));
 	});
 
 	bot.on("message", messageReceived);
