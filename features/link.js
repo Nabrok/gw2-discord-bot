@@ -51,7 +51,7 @@ function checkUserAccount(user, callback) {
 				}
 			], function(err) {
 				callback(null, false);
-				if (guild_role_name) gw2.request('/v2/guild/'+guild_id+'/members', guild_key, null, { always_hook: true });
+				if (guild_role_name) gw2.request('/v2/guild/'+guild_id+'/members', guild_key);
 			});
 			return;
 		}
@@ -86,7 +86,7 @@ function checkUserAccount(user, callback) {
 				], next_server);
 			}, function(err) {
 				// Update the member list
-				if (guild_role_name) gw2.request('/v2/guild/'+guild_id+'/members', guild_key, null, { always_hook: true });
+				if (guild_role_name) gw2.request('/v2/guild/'+guild_id+'/members', guild_key);
 				callback(null, true);
 			});
 		});
@@ -171,6 +171,11 @@ function initServer(server, callback) {
 		}
 	], callback);
 }
+
+gw2.on('/v2/account', (account, key, from_cache) => {
+	if (from_cache) return;
+	// TODO: Some of the code from checkUserAccount could probably go here
+});
 
 module.exports = function(bot) {
 	bot.on("message", messageReceived);
