@@ -4,7 +4,7 @@ var
 	config = require('config'),
 	nJwt = Promise.promisifyAll(require('njwt')),
 	db = Promise.promisifyAll(require('../../../lib/db')),
-	gw2 = Promise.promisifyAll(require('../../../lib/gw2'))
+	gw2 = require('../../../lib/gw2')
 ;
 
 var jwt_secret = config.has('web.jwt_secret') ? config.get('web.jwt_secret') : config.get('discord.client_secret');
@@ -141,7 +141,7 @@ function newConnection(socket) {
 
 	socket.on('set key', (data, cb) => {
 		verifyJwt(data, socket)
-			.then(() => gw2.requestAsync('/v2/tokeninfo', data.data))
+			.then(() => gw2.request('/v2/tokeninfo', data.data))
 			.then(token => db.setUserKeyAsync(data.user.id, data.data, token))
 			.then(() => cb({ message: 'success' }))
 			.catch(err => cb({ error: err.message }))
@@ -151,7 +151,7 @@ function newConnection(socket) {
 	socket.on('get characters', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
-			.then(key => gw2.requestAsync('/v2/characters', key))
+			.then(key => gw2.request('/v2/characters', key))
 			.then(characters => cb({ message: 'success', data: characters }))
 			.catch(err => cb({ error: err.message }))
 		;
@@ -160,7 +160,7 @@ function newConnection(socket) {
 	socket.on('get character', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
-			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data), key))
+			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data), key))
 			.then(character => cb({ message: 'success', data: character }))
 			.catch(err => cb({ error: err.message }))
 		;
@@ -193,7 +193,7 @@ function newConnection(socket) {
 	socket.on('get build string', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
-			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getBuildString(character, data.data.type))
 			.then(string => cb({ message: 'success', data: string }))
 			.catch(err => cb({ error: err.message }))
@@ -202,7 +202,7 @@ function newConnection(socket) {
 	socket.on('post build string', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
-			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getBuildString(character, data.data.type))
 			.then(string => {
 				var channel = discord.channels.get("id", data.data.channel);
@@ -216,7 +216,7 @@ function newConnection(socket) {
 	socket.on('get equip string', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
-			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getEquipString(character))
 			.then(string => cb({ message: 'success', data: string }))
 			.catch(err => cb({ error: err.message }))
@@ -225,7 +225,7 @@ function newConnection(socket) {
 	socket.on('post equip string', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
-			.then(key => gw2.requestAsync('/v2/characters/'+encodeURIComponent(data.data.name), key))
+			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getEquipString(character, data.data.type))
 			.then(string => {
 				var channel = discord.channels.get("id", data.data.channel);
