@@ -23,6 +23,10 @@ function initServer(server, ranks) {
 	);
 }
 
+function delay(ms) {
+	return new Promise((resolve, reject) => setTimeout(resolve, ms));
+}
+
 function syncMembersToRoles(server, members, ranks) {
 	var bot = server.client;
 	return initServer(server, ranks)
@@ -50,9 +54,7 @@ function syncMembersToRoles(server, members, ranks) {
 					});
 					//return funcs.reduce((p, f) => p.then(f), Promise.resolve());
 					// For reasons we need to add a timeout to make this work properly.  Revisit with a future discord.js version.
-					return funcs.reduce((p, f) => p.then(() => new Promise((resolve, reject) => {
-						setTimeout(() => f().then(() => resolve()), 200);
-					})), Promise.resolve());
+					return funcs.reduce((p, f) => p.then(f).then(() => delay(200)), Promise.resolve());
 				}))
 			).then(() => {
 				// Remove anybody not in the guild roster
@@ -84,9 +86,7 @@ function syncMembersToRoles(server, members, ranks) {
 				// This should work, but it doesn't
 				//.then(() => funcs.reduce((p, f) => p.then(f), Promise.resolve()))
 				// Adding a timeout makes it work.  Maybe revisit this with a future discord.js version.
-				.then(() => funcs.reduce((p, f) => p.then(() => new Promise((resolve, reject) => {
-					setTimeout(() => f().then(() => resolve()), 200);
-				})), Promise.resolve()));
+				.then(() => funcs.reduce((p, f) => p.then(f).then(() => delay(200)), Promise.resolve()))
 			});
 		})
 	;
