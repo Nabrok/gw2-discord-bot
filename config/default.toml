@@ -14,6 +14,7 @@ role = "" # Name of the role, leave blank if you don't want this
 id  = "" # Guild unique ID in format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX, this can be found at https://api.guildwars2.com/v2/guild/search?name=[guild name]
 key = "" # API Key from top guild rank with the "guilds" permission
 member_role = "" # Name of the role guild members go in
+create_roles = true # Have the bot create roles for each rank.  If false, members will only be assigned to their rank role if it exists.
 motd_channel = "" # Will set the channel description to the guild motd
 motd_convert_urls = true # Convert urls in the guild motd to actual urls that discord parses to a link, if they don't start with e.g. "http://"
 motd_excluded_subdomains = [ # An array of url subdomains of which the url should not be converted (these are regular expressions)
