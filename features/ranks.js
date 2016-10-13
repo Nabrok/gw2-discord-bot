@@ -1,6 +1,5 @@
 var
 	Promise = require('bluebird'),
-	async = require('async'),
 	config = require('config'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
