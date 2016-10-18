@@ -16,8 +16,8 @@ function htmlToMessage(html) {
 	return toMarkdown(html, {
 		converters: [
 			{ // Convert various stuff to plain-text
-				filter: ["a", "small"],
-				replacement: (innerHTML, node) => innerHTML
+				filter: ["a", "small", "span"],
+				replacement: (innerHTML, node) => node.style.display != "none" ? innerHTML : ""
 			},
 			{ // Filter out all unwanted tags
 				filter: node => !node.nodeName.match(/^(b|strong|i|em|s|del|p)$/i),
