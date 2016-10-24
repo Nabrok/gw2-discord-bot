@@ -42,13 +42,14 @@ export default class App extends React.Component {
 					<Navbar.Collapse>
 						{ this.state.userLoggedIn && <Nav>
 							<LinkContainer to="/characters"><NavItem eventKey={1}>Characters</NavItem></LinkContainer>
+							<LinkContainer to="/sessions"><NavItem eventKey={2}>Sessions</NavItem></LinkContainer>
 						</Nav> }
-						<Nav pullRight>
-							{ this.state.userLoggedIn && <NavDropdown eventKey={1} title={ this.state.user } id="user_dropdown">
+						{ this.state.userLoggedIn && <Nav pullRight>
+							<NavDropdown eventKey={1} title={ this.state.user } id="user_dropdown">
 								<LinkContainer to="/api_key"><NavItem eventKey={1}>API Key</NavItem></LinkContainer>
 								<LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer>
-							</NavDropdown> }
-						</Nav>
+							</NavDropdown>
+						</Nav> }
 					</Navbar.Collapse>
 				</Navbar>
 				<div className="container">{this.props.children}</div>

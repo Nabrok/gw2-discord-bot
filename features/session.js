@@ -1,170 +1,181 @@
 var
-	async = require('async'),
-	db = require('../lib/db'),
+	Promise = require('bluebird'),
+	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
 	diff = require('deep-diff').diff,
 	phrases = require('../lib/phrases')
 ;
 
 const session_prefix = 'session';
-const relog_window = 300000; // 5 minutes
+const archive_prefix = 'session_archive';
+const relog_window = 300000; // 5 minutes in miliseconds
+const archive_ttl = 604800; // 7 days in seconds
 
-function gatherData(user, callback) {
-	async.waterfall([
-		function(next) {
-			async.parallel({
-				key: function(next) { db.getUserKey(user.id, next) },
-				token: function(next) { db.getUserToken(user.id, next) }
-			}, next);
-		},
-		function(key_data, next) {
-			var key = key_data.key;
-			if (! key) return next(new Error("endpoint requires authentication"));
-			var permissions = JSON.parse(key_data.token).permissions;
-			var queries = {};
-			if (permissions.indexOf('progression') > -1) {
-				queries.account = function(next) { gw2.request('/v2/account', key, next) };
-				queries.achievements = function(next) { gw2.request('/v2/account/achievements', key, next) };
-			}
-			if (permissions.indexOf('wallet') > -1) queries.wallet = function(next) { gw2.request('/v2/account/wallet', key, next) };
-			if (permissions.indexOf('inventories') > -1) {
-				queries.materials = function(next) { gw2.request('/v2/account/materials', key, next) };
-				queries.bank = function(next) { gw2.request('/v2/account/bank', key, next) };
-				queries.shared = function(next) { gw2.request('/v2/account/inventory', key, next) };
-			}
-			if (permissions.indexOf('characters') > -1) {
-				queries.characters = function(next) {
-					gw2.request('/v2/characters', key, (err, characters) => {
-						if (err) return next(err);
-						var char_funcs = characters.reduce((total, c) => {
-							total[c] = function(next) {
-								gw2.request('/v2/characters/'+encodeURIComponent(c), key, next);
-							};
-							return total;
-						}, {});
-						async.parallelLimit(char_funcs, 3, next);
-					});
-				}
-			}
-			if (permissions.indexOf('pvp') > -1) {
-				queries.pvp = function(next) { gw2.request('/v2/pvp/stats', key, next) };
-			}
-			async.parallelLimit(queries, 5, next);
+function resultsToObject(start, key, results) {
+	return start.reduce((t,q,i) => {
+		t[q[key]] = results[i];
+		return t;
+	}, {});
+}
+
+function gatherData(user) {
+	return Promise.all([db.getUserKeyAsync(user.id), db.getUserTokenAsync(user.id)])
+	.then(result => {
+		var key = result[0], token = result[1] ? JSON.parse(result[1]) : {};
+		if (! key) throw new Error("endpoint requires authentication");
+		var permissions = token.permissions || [];
+		var queries = [];
+		if (permissions.indexOf('progression') > -1) {
+			queries.push({ name: 'account', promise: () => gw2.request('/v2/account', key) });
+			queries.push({ name: 'achievements', promise: () => gw2.request('/v2/account/achievements', key) });
 		}
-	], callback);
-}
-
-function startPlaying(user, callback) {
-	var session_name = session_prefix+':'+user.id;
-	var time = new Date();
-	async.waterfall([
-		function(next) { db.getObject(session_name, next) },
-		function(session, next) {
-			if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) return next(null, session);
-			session = { start: { time: time } };
-			gatherData(user, (err, result) => {
-				if (err) return next(err);
-				session.start.data = result;
-				next(null, session);
-			});
-		},
-		function(session, next) { db.setObject(session_name, session, next); }
-	], callback);
-}
-
-function stopPlaying(user, callback) {
-	var session_name = session_prefix+':'+user.id;
-	var time = new Date();
-	async.waterfall([
-		function(next) { db.getObject(session_name, next) },
-		function(session, next) {
-			if (! session) return next(new Error('no session'));
-			session.stop = { time: time };
-			gatherData(user, (err, result) => {
-				if (err) return next(err);
-				session.stop.data = result;
-				next(null, session);
-			});
-		},
-		function(session, next) { db.setObject(session_name, session, next); }
-	], callback);
-}
-
-function checkUsers(users) {
-	async.each(users, (user, next_user) => {
-		if (! user.game) return next_user();
-		if (user.game.name !== "Guild Wars 2") return next_user();
-		startPlaying(user, next_user);
+		if (permissions.indexOf('wallet') > -1) {
+			queries.push({ name: 'wallet', promise: () => gw2.request('/v2/account/wallet', key) });
+		}
+		if (permissions.indexOf('inventories') > -1) {
+			queries.push({ name: 'materials', promise: () => gw2.request('/v2/account/materials', key) });
+			queries.push({ name: 'bank', promise: () => gw2.request('/v2/account/bank', key) });
+			queries.push({ name: 'inventory', promise: () => gw2.request('/v2/account/inventory', key) });
+		}
+		if (permissions.indexOf('pvp') > -1) {
+			queries.push({ name: 'pvp', promise: () => gw2.request('/v2/pvp/stats', key) });
+		}
+		if (permissions.indexOf('characters') > -1) {
+			queries.push({ name: 'characters', promise: () => gw2.request('/v2/characters', key).then(characters => {
+				var char_queries = characters.map(c => ({
+					name: c,
+					promise: () => gw2.request('/v2/characters/'+encodeURIComponent(c), key)
+				}));
+				return Promise.map(char_queries, c => c.promise(), { concurrency: 3 }).then(results => resultsToObject(char_queries, 'name', results));
+			})});
+		}
+		return Promise.map(queries, q => q.promise(), { concurrency: 5 }).then(results => resultsToObject(queries, 'name', results));
 	});
 }
 
-function parseSession(user, callback) {
+function startPlaying(user) {
 	var session_name = session_prefix+':'+user.id;
-	async.waterfall([
-		function(next) { db.getObject(session_name, next) },
-		function(session, next) {
-			if (! session) return next(new Error("no session"));
-			if (session.stop) return next(null, session); // Complete session, nothing more to do
-			// Session still in progress, gather the current data
-			session.stop = { time: new Date() };
-			gatherData(user, (err, result) => {
-				if (err) return next(err);
-				session.stop.data = result;
-				next(null, session);
-			});
-		}
-	], function(err, session) {
-		if (err) return callback(err);
-		if (! session.stop) return callback(new Error("no session stop"));
+	var time = new Date();
+	return db.getObjectAsync(session_name)
+	.then(session => {
+		console.log(user.name+' start at '+time);
+		if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) return; // recent login/logout
+		if (session && ! session.stop) return; // No logout data (presumed bot restart)
+		session = { start: { time: time } };
+		return gatherData(user)
+		.then(data => {
+			session.start.data = data;
+			return db.setObjectAsync(session_name, session);
+		});
+	});
+}
+
+function stopPlaying(user) {
+	var session_name = session_prefix+':'+user.id;
+	var time = new Date();
+	return db.getObjectAsync(session_name)
+	.then(session => {
+		if (! session) throw new Error('no session');
+		console.log(user.name+' stop at '+time);
+		session.stop = { time: time };
+		return gatherData(user).then(data => {
+			session.stop.data = data;
+			return db.setObjectAsync(session_name, session).then(() => getSessionDiff(session));
+		})
+		.then(diff => {
+			var archive_name = archive_prefix+":"+user.id+":"+(new Date(session.start.time).getTime());
+			if (! diff) return; // Nothing changed in the session
+			var archive = {
+				start_time: session.start.time,
+				stop_time: session.stop.time,
+				diff: diff,
+				snapshot: session.stop.data
+			};
+			return db.setObjectAsync(archive_name, archive)
+			.then(() => db.expireObjectAsync(archive_name, archive_ttl))
+		});
+	});
+}
+
+function checkUsers(users) {
+	users.forEach(user => {
+		if (! user.game) return;
+		if (user.game.name !== "Guild Wars 2") return;
+		startPlaying(user);
+	});
+}
+
+function getSessionDiff(session) {
+	// Rearrange some arrays into key/value pairs by id (makes it easier to diff)
+	['start', 'stop'].forEach(t => {
+		if (! session[t]) return;
+		['wallet', 'achievements'].forEach(d => {
+			if (! session[t].data[d]) return;
+			session[t].data[d] = session[t].data[d].reduce((total, i) => {
+				total[i.id] = i;
+				return total;
+			}, {});
+		});
+		// Total count of items (no matter where they are)
+		session[t].data.all_items = {};
+		['materials', 'bank', 'shared'].forEach(s => {
+			if (! session[t].data[s]) return;
+			session[t].data.all_items = session[t].data[s].reduce((total,i) => {
+				if (!i) return total;
+				if (total[i.id]) total[i.id] += i.count;
+				else total[i.id] = i.count;
+				return total;
+			}, session[t].data.all_items);
+		});
+		if (session[t].data.characters) Object.keys(session[t].data.characters).forEach(c => {
+			var character = session[t].data.characters[c];
+			if (! character.bags) return;
+			session[t].data.all_items = character.bags.reduce((total, b) => {
+				if (! b) return total;
+				b.inventory.forEach(i => {
+					if (! i) return;
+					if (total[i.id]) total[i.id] += i.count;
+					else total[i.id] = i.count;
+				});
+				return total;
+			}, session[t].data.all_items);
+			session[t].data.all_items = character.equipment.reduce((total, e) => {
+				if (total[e.id]) total[e.id] += 1;
+				else total[e.id] = 1;
+				return total;
+			}, session[t].data.all_items);
+		});
+	});
+	var differences = diff(session.start.data, session.stop.data);
+	return differences;
+}
+
+function parseSession(user) {
+	var session_name = session_prefix+':'+user.id;
+	return db.getObjectAsync(session_name).then(session => {
+		if (! session) throw new Error("no session");
+		if (session.stop) return session;
+		// Session still in progress
+		session.stop = { time: new Date() };
+		return gatherData(user).then(data => {
+			session.stop.data = data;
+			return session;
+		});
+	}).then(session => {
+		if (! session.stop) throw new Error("no session stop");
 		var string = '';
 		var time_in_ms = new Date(session.stop.time) - new Date(session.start.time);
 		var time_in_mins = Math.round(time_in_ms / 60000);
 		var sentences = [];
 		sentences.push(phrases.get("SESSION_PLAYTIME", { minutes: time_in_mins }));
-		if (! session.start.data) return callback(null, sentences.join("  "));
-		// Rearrange some arrays into key/value pairs by id (makes it easier to diff)
-		['start', 'stop'].forEach(t => {
-			['wallet', 'achievements'].forEach(d => {
-				if (! session[t].data[d]) return;
-				session[t].data[d] = session[t].data[d].reduce((total, i) => {
-					total[i.id] = i;
-					return total;
-				}, {});
-			});
-			// Total count of items (no matter where they are)
-			session[t].data.all_items = {};
-			['materials', 'bank', 'shared'].forEach(s => {
-				if (! session[t].data[s]) return;
-				session[t].data.all_items = session[t].data[s].reduce((total,i) => {
-					if (!i) return total;
-					if (i.binding) return total;
-					if (total[i.id]) total[i.id] += i.count;
-					else total[i.id] = i.count;
-					return total;
-				}, session[t].data.all_items);
-			});
-			if (session[t].data.characters) Object.keys(session[t].data.characters).forEach(c => {
-				var character = session[t].data.characters[c];
-				if (! character.bags) return;
-				session[t].data.all_items = character.bags.reduce((total, b) => {
-					if (! b) return total;
-					b.inventory.forEach(i => {
-						if (! i) return;
-						if (i.binding) return;
-						if (total[i.id]) total[i.id] += i.count;
-						else total[i.id] = i.count;
-					});
-					return total;
-				}, session[t].data.all_items);
-			});
-		});
-		var differences = diff(session.start.data, session.stop.data);
+		if (! session.start.data) return sentences.join("  "); // No data from API, show play time only.
 		var wvw_stats = [];
 		var pvp_stats = [];
 		var new_achievements = [];
 		var items_gained = [];
 		var items_lost = [];
 		var pvp_rank_ups = 0;
+		var differences = getSessionDiff(session);
 		if (differences) differences.forEach(d => {
 			// account differences
 			if (d.path[0] === "account" && d.path[1] === "wvw_rank") wvw_stats.push(phrases.get("SESSION_WVW_RANK", { number: (d.rhs - d.lhs) }));
@@ -219,13 +230,11 @@ function parseSession(user, callback) {
 		if (pvp_rank_ups) pvp_stats.unshift(phrases.get("SESSION_PVP_RANK", { number: pvp_rank_ups }));
 		if (pvp_stats.length > 0) sentences.push(phrases.get("SESSION_PVP", { counts: pvp_stats.join(", ") }));
 		if (wvw_stats.length > 0) sentences.push(phrases.get("SESSION_WVW", { counts: wvw_stats.join(", ") }));
-		async.parallel({
-			achievements: function(next) { gw2.getAchievements(new_achievements, next); },
-			prices: function(next) { gw2.getPrices(items_gained.map(i => i.id).concat(items_lost.map(i => i.id)), next); }
-		}, function(err, result) {
-			if (err) return callback(err);
-			var ach = result.achievements;
-			var prices = result.prices;
+		return Promise.all([
+			gw2.getAchievements(new_achievements),
+			gw2.getPrices(items_gained.map(i => i.id).concat(items_lost.map(i => i.id)))
+		]).then(results => {
+			var ach = results[0], prices = results[1];
 			if (new_achievements.length > 0) sentences.push(phrases.get("SESSION_ACHIEVEMENTS", { count: new_achievements.length, list: new_achievements.map(a => ach[a].name).join(", ") }));
 			if (items_gained.length > 0) {
 				var value_gained = items_gained.reduce((t, i) => (t + (i.change * (prices[i.id] ? prices[i.id].buys.unit_price : 0))), 0);
@@ -235,7 +244,7 @@ function parseSession(user, callback) {
 				var value_lost = items_lost.reduce((t, i) => (t + (i.change * (prices[i.id] ? prices[i.id].buys.unit_price : 0))), 0);
 				sentences.push(phrases.get("SESSION_ITEMS_LOST", { count: items_lost.length, value: coinsToGold(value_lost) }));
 			}
-			callback(null, sentences.join("  "));
+			return sentences.join("  ");
 		});
 	});
 }
@@ -260,29 +269,29 @@ function presenceChanged(oldState, newState) {
 	}
 	if (wasPlaying && ! isPlaying) {
 		// User stopped playing
-		stopPlaying(newState, (err) => {
-			//parseSession(newState, (err, string) => { });
+		stopPlaying(newState).then(() => {
+			// Refresh data in 5 minutes to make sure we don't have old cached data
+			setTimeout(function() {
+				stopPlaying(newState);
+			}, 305000);
 		});
-		// Refresh data in 5 minutes to make sure we don't have old cached data
-		setTimeout(function() {
-			stopPlaying(newState, () => { });
-		}, 305000);
 	}
 }
 
 function messageReceived(message) {
 	var cmd = new RegExp('^!'+phrases.get("SESSION_SHOWLAST")+'$', 'i');
 	if (! message.content.match(cmd)) return;
-	message.channel.startTyping(() => {
-		parseSession(message.author, (err, string) => {
-			if (err && err.message === "no session") string = phrases.get("SESSION_NO_SESSION");
-			else if (err) {
-				string = phrases.get("CORE_ERROR");
-				console.log(err.message);
-			}
-			message.channel.stopTyping(() => { message.reply(string) });
-		});
-	});
+	var messageAsync = Promise.promisifyAll(message);
+	var channelAsync = Promise.promisifyAll(message.channel);
+	channelAsync.startTyping()
+	.then(() => parseSession(message.author))
+	.catch(err => {
+		if (err.message === "no session") return phrases.get("SESSION_NO_SESSION");
+		console.error(err.stack);
+		return phrases.get("CORE_ERROR");
+	})
+	.then(response => messageAsync.reply(response))
+	.then(() => channelAsync.stopTyping());
 }
 
 module.exports = function(bot) {

@@ -245,6 +245,13 @@ function newConnection(socket) {
 		;
 	});
 
+	socket.on('get sessions', (data, cb) => {
+		verifyJwt(data, socket)
+		.then(() => db.findObjectsAsync('session_archive:'+data.user.id+':*'))
+		.then(data => cb({ message: 'success', data }))
+		.catch(err => cb({ error: err.message }));
+	});
+
 	socket.on('disconnect', () => {
 		var userid = Object.keys(socketIdMap).find(i => Object.keys(socketIdMap[i]).some(s => s === socket.id));
 		if (! userid) return;

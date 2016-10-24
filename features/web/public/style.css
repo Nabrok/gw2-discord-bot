@@ -4,6 +4,12 @@ img.item {
 	height: 32px;
 }
 
+img.largeItem {
+	border: 2px solid #888;
+	width: 64px;
+	height: 64px;
+}
+
 img.Legendary { border-color: #4c139d; }
 img.Ascended { border-color: #fb3e8d; }
 img.Exotic { border-color: #ffa405; }
@@ -66,4 +72,36 @@ div.discord_preview code {
 	background-color: #222;
 	border: 1px solid black;
 	color: #888;
+}
+
+div.achievement {
+	display: inline-block;
+	width: 400px;
+	height: 100px;
+	border: 2px solid DarkGreen;
+	border-radius: 10px;
+	overflow: hidden;
+	margin: 5px;
+	padding: 3px;
+	padding-left: 73px;
+	position: relative;
+}
+
+div.achievement div.ach_icon {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 70px;
+	height: 100px;
+	background-color: DarkGreen;
+}
+
+div.achievement img {
+	position: absolute;
+	top: 18px;
+	left: 3px;
+}
+
+div.achievement .lead {
+	margin-bottom: 10px;
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { Alert, Row, Col, Form, FormGroup, ControlLabel, FormControl, Radio, Panel, Popover, OverlayTrigger, Tabs, Tab, Nav, NavItem, Button, DropdownButton, MenuItem, Dropdown } from 'react-bootstrap';
 import { browserHistory, Link } from 'react-router';
 import PostToChannel from './partials/PostToChannel';
+import Item from './partials/Item';
 
 import Socket from '../services/WebSocket';
 import TokenStore from '../stores/TokenStore';
@@ -16,7 +17,7 @@ import SkillStore from '../stores/SkillStore';
 import LegendStore from '../stores/LegendStore';
 
 
-class Item extends React.Component {
+class ShowItem extends React.Component {
 	constructor(props) {
 		super(props);
 
@@ -83,25 +84,10 @@ class Item extends React.Component {
 	}
 
 	render() {
-		var item = this.state.item_details;
 		var stats = this.state.stat_details;
-		var skin = this.state.skin_details;
-		var icon = this.props.data.skin ? skin.icon : item.icon;
-		var name = this.props.data.skin ? skin.name : item.name;
-		var details = (
-			<Popover id="item-details" title={name}>
-				Level {item.level} {item.rarity} {stats.name} {item.details && item.details.type ? item.details.type : item.type}
-				{ this.state.upgrades.length > 0 && <div>
-					<hr/>
-					{ this.state.upgrades.map((u,i) => <div key={i}>{u.name}</div>) }
-				</div> }
-			</Popover>
-		);
 		return (
 			<div>
-				<OverlayTrigger trigger={['hover', 'focus', 'click']} rootClose placement="right" overlay={details}>
-					<img className={item.rarity+' item'} src={icon} />
-				</OverlayTrigger>
+				<Item item={this.state.item_details} stats={this.state.stat_details} skin={this.state.skin_details} upgrades={this.state.upgrades} size="small" placement="right" />
 				{' '}
 				{stats.name}
 			</div>
@@ -471,19 +457,19 @@ class Equipment extends React.Component {
 		return (<div><Row>
 			<Col sm={4}>
 				<Panel header="Armor">
-					{ ['Helm', 'Shoulders', 'Coat', 'Gloves', 'Leggings', 'Boots'].filter(slot => !!gear_hash[slot]).map(slot => <Item key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
+					{ ['Helm', 'Shoulders', 'Coat', 'Gloves', 'Leggings', 'Boots'].filter(slot => !!gear_hash[slot]).map(slot => <ShowItem key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
 				</Panel>
 			</Col>
 			<Col sm={4}>
 				<Panel header="Trinkets">
-					{ ['Backpack', 'Accessory1', 'Accessory2', 'Amulet', 'Ring1', 'Ring2'].filter(slot => !!gear_hash[slot]).map(slot => <Item key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
+					{ ['Backpack', 'Accessory1', 'Accessory2', 'Amulet', 'Ring1', 'Ring2'].filter(slot => !!gear_hash[slot]).map(slot => <ShowItem key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
 				</Panel>
 			</Col>
 			<Col sm={4}>
 				<Panel header="Weapons">
-					{ ['WeaponA1', 'WeaponA2'].filter(slot => !!gear_hash[slot]).map(slot => <Item key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
+					{ ['WeaponA1', 'WeaponA2'].filter(slot => !!gear_hash[slot]).map(slot => <ShowItem key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
 					<br/>
-					{ ['WeaponB1', 'WeaponB2'].filter(slot => !!gear_hash[slot]).map(slot => <Item key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
+					{ ['WeaponB1', 'WeaponB2'].filter(slot => !!gear_hash[slot]).map(slot => <ShowItem key={slot} data={gear_hash[slot]} ref={ i => { this._myItems.push(i) } } />) }
 				</Panel>
 			</Col>
 		</Row>
