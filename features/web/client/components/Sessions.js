@@ -238,7 +238,6 @@ class AchievementsTab extends React.Component {
 			{this.state.categories.filter(c => ach.some(a => c.achievements.indexOf(parseInt(a.path[1])) > - 1)).map(c => <div key={c.id}>
 				{c.achievements.filter(id => ach.find(a => parseInt(a.path[1]) === id)).map(id => {
 					var details = this.state.achievement_details.find(d => d.id === id) || {};
-					var diff = ach.filter(a => parseInt(a.path[1]) === id);
 					return (<div key={id} className="achievement">
 						<div title={c.name} className="ach_icon"><img src={c.icon} /></div>
 						<p className="lead">{details.name}</p>
