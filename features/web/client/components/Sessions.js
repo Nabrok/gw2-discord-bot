@@ -176,14 +176,14 @@ class ItemsTab extends React.Component {
 		var total_gained = items_gained.reduce((t,i) => t += i.price, 0);
 		var total_lost = items_lost.reduce((t,i) => t += i.price, 0);
 		return(<div>
-			{ items_gained.length > 0 && <Panel header="Items Gained" footer={<Gold coins={total_gained} />} >
+			{ items_gained.length > 0 && <Panel header="Items Gained" footer={<Gold coins={total_gained} />} collapsible={true} defaultExpanded={true} >
 				{ items_gained.map((d,i) => <div key={i} style={{display: 'inline-block', textAlign: 'center'}}>
 					<Item item={d.item} count={d.count} />
 					<br/>
 					<span style={{fontSize: 'x-small'}}><Gold coins={d.price} compact={true} /></span>
 				</div>) }
 			</Panel> }
-			{ items_lost.length > 0 && <Panel header="Items Lost" footer={<Gold coins={total_lost} />} >
+			{ items_lost.length > 0 && <Panel header="Items Lost" footer={<Gold coins={total_lost} />} collapsible={true} defaultExpanded={true} >
 				{ items_lost.map((d,i) => <div key={i} style={{display: 'inline-block', textAlign: 'center'}}>
 					<Item item={d.item} count={d.count} />
 					<br/>
@@ -328,7 +328,7 @@ class Session extends React.Component {
 				<Col sm={6}><Panel header="Wallet" collapsible={true} defaultExpanded={true}><WalletTab wallet={wallet} /></Panel></Col>
 			</Row>
 			<Row>
-				<Col xs={12}><Panel header="Items" collapsible={true} defaultExpanded={true}><ItemsTab items={items} /></Panel></Col>
+				<Col xs={12}><ItemsTab items={items} /></Col>
 			</Row>
 			{ achievements.length > 0 && <Row>
 				<Col xs={12}><Panel header="Achievements" collapsible={true} defaultExpanded={true}><AchievementsTab achievements={achievements} /></Panel></Col>
