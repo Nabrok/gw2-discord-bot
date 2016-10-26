@@ -9,7 +9,7 @@ const coins_in_silver = 100;
 
 export default class Gold extends React.Component {
 	render() {
-		var coins = this.props.coins;
+		var coins = this.props.coins || 0;
 		var negative = (coins < 0);
 		if (negative) coins = coins * -1;
 		var gold = Math.floor(coins / coins_in_gold);
