@@ -60,8 +60,9 @@ export default class App extends React.Component {
 						</Nav> }
 						{ this.state.userLoggedIn && <Nav pullRight>
 							<NavDropdown eventKey={1} title={ this.state.user } id="user_dropdown">
-								<LinkContainer to="/api_key"><NavItem eventKey={1}>API Key</NavItem></LinkContainer>
-								<LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer>
+								<LinkContainer to="/settings"><NavItem eventKey={1}>Settings</NavItem></LinkContainer>
+								<LinkContainer to="/api_key"><NavItem eventKey={2}>API Key</NavItem></LinkContainer>
+								<LinkContainer to="/logout"><NavItem eventKey={3}>Logout</NavItem></LinkContainer>
 							</NavDropdown>
 						</Nav> }
 						{ this.state.loading && <Navbar.Text pullRight><i className="fa fa-spinner fa-spin fa-fw" /></Navbar.Text> }

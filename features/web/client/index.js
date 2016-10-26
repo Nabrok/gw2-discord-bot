@@ -7,6 +7,7 @@ import Home from './components/Home';
 import Login from './components/Login';
 import Auth from './components/Auth';
 import ApiKey from './components/ApiKey';
+import Settings from './components/Settings';
 import Characters from './components/Characters';
 import Character from './components/Character';
 import Sessions from './components/Sessions';
@@ -21,8 +22,12 @@ function needsLogin(nextState, replace) {
 }
 
 let jwt = localStorage.getItem('jwt');
+let theme = localStorage.getItem('theme');
 if (jwt) {
 	LoginActions.loginUser(jwt);
+}
+if (theme) {
+	document.getElementById('bootstrap_theme').setAttribute('href', theme);
 }
 
 var routes = (
@@ -30,6 +35,7 @@ var routes = (
 		<Route onEnter={needsLogin}>
 			<IndexRoute component={Home} />
 			<Route path="/api_key" component={ApiKey} />
+			<Route path="/settings" component={Settings} />
 			<Route path="/characters" component={Characters} />
 			<Route path="/characters/:name" component={Character} />
 			<Route path="/sessions" component={Sessions} />
