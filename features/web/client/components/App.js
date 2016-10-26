@@ -4,24 +4,32 @@ import { Link } from 'react-router';
 import { LinkContainer } from 'react-router-bootstrap';
 
 import LoginStore from '../stores/LoginStore';
+import LoadingStore from '../stores/LoadingStore';
 
 export default class App extends React.Component {
 	constructor() {
 		super();
-		this.state = this._getLoginState();
+		this.state = Object.assign(this._getLoginState(), this._getLoadingState());
 	}
 
 	componentDidMount() {
 		this.changeListener = this._onChange.bind(this);
+		this.loadingListener = this._onLoadingChange.bind(this);
 		LoginStore.addChangeListener(this.changeListener);
+		LoadingStore.addChangeListener(this.loadingListener);
 	}
 
 	componentWillUnmount() {
 		LoginStore.removeChangeListener(this.changeListener);
+		LoadingStore.removeChangeListener(this.loadingListener);
 	}
 
 	_onChange() {
 		this.setState(this._getLoginState());
+	}
+
+	_onLoadingChange() {
+		this.setState(this._getLoadingState());
 	}
 
 	_getLoginState() {
@@ -29,6 +37,12 @@ export default class App extends React.Component {
 			userLoggedIn: LoginStore.isLoggedIn(),
 			user: LoginStore.username
 		};
+	}
+
+	_getLoadingState() {
+		return {
+			loading: LoadingStore.loading
+		}
 	}
 
 	render() {
@@ -50,6 +64,7 @@ export default class App extends React.Component {
 								<LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer>
 							</NavDropdown>
 						</Nav> }
+						{ this.state.loading && <Navbar.Text pullRight><i className="fa fa-spinner fa-spin fa-fw" /></Navbar.Text> }
 					</Navbar.Collapse>
 				</Navbar>
 				<div className="container">{this.props.children}</div>

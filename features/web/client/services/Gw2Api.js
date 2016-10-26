@@ -1,5 +1,7 @@
 import request from 'superagent';
 
+import LoadingActions from '../actions/LoadingActions';
+
 const api_url = 'https://api.guildwars2.com';
 
 class Gw2Api {
@@ -11,7 +13,9 @@ class Gw2Api {
 				var this_bit = ids.splice(0, 200);
 				var this_path = path + '?ids=' + this_bit.join(',');
 				promises.push(new Promise((resolve, reject) => {
+					LoadingActions.add();
 					request.get(api_url+this_path).accept('json').end((err, res) => {
+						LoadingActions.remove();
 						if (err) return reject(err.message);
 						resolve(JSON.parse(res.text));
 					});
@@ -20,7 +24,9 @@ class Gw2Api {
 			return Promise.all(promises).then(results => results.reduce((t,a) => t.concat(a), []));
 		} else {
 			return new Promise((resolve, reject) => {
+				LoadingActions.add();
 				request.get(api_url+path).accept('json').end((err, res) => {
+					LoadingActions.remove();
 					if (err) return reject(err.message);
 					resolve(JSON.parse(res.text));
 				});
