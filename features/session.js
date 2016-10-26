@@ -58,7 +58,6 @@ function startPlaying(user) {
 	var time = new Date();
 	return db.getObjectAsync(session_name)
 	.then(session => {
-		console.log(user.name+' start at '+time);
 		if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) return; // recent login/logout
 		if (session && ! session.stop) return; // No logout data (presumed bot restart)
 		session = { start: { time: time } };
@@ -76,7 +75,6 @@ function stopPlaying(user) {
 	return db.getObjectAsync(session_name)
 	.then(session => {
 		if (! session) throw new Error('no session');
-		console.log(user.name+' stop at '+time);
 		session.stop = { time: time };
 		return gatherData(user).then(data => {
 			session.stop.data = data;
