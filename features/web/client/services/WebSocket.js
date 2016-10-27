@@ -20,6 +20,10 @@ class Socket {
 		this.socket.on(e, callback);
 	}
 
+	removeListener(e, callback) {
+		this.socket.removeListener(e, callback);
+	}
+
 	login(data) {
 		return new Promise((resolve, reject) => {
 			LoadingActions.add();

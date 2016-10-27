@@ -344,7 +344,7 @@ export default class Sessions extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this._getSessions = this._getSessions.bind(this);
+		this._sessionData = this._sessionData.bind(this);
 
 		this.state = {
 			selectedSession: 0,
@@ -353,15 +353,20 @@ export default class Sessions extends React.Component {
 	}
 
 	componentDidMount() {
-		this._getSessions();
+		Socket.on('new sessions', this._sessionData);
+		Socket.send('get sessions').then(this._sessionData).catch(console.log);
 	}
 
-	_getSessions() {
-		Socket.send('get sessions')
-		.then(sessions => sessions.map(s => { s.start_time = new Date(s.start_time); s.stop_time = new Date(s.stop_time); return s }))
-		.then(sessions => sessions.sort((a,b) => b.start_time - a.start_time))
-		.then(sessions => this.setState({ sessions }))
-		.catch(console.log);
+	componentWillUnmount() {
+		Socket.removeListener('new sessions', this._sessionData);
+	}
+
+	_sessionData(data) {
+		var sessions = data
+			.map(s => { s.start_time = new Date(s.start_time); s.stop_time = new Date(s.stop_time); return s })
+			.sort((a,b) => b.start_time - a.start_time)
+		;
+		this.setState({sessions});
 	}
 
 	_selectSession(selectedSession) {

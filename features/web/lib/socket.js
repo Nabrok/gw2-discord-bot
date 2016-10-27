@@ -14,6 +14,7 @@ var socketIdMap = {};
 
 var sub = db.subscribe("user_tokens:*");
 db.subscribe("privacy:*");
+db.subscribe("session_archive:*");
 
 sub.on("pmessage", (pattern, channel, message) => {
 	var parts = channel.split(':');
@@ -39,6 +40,10 @@ sub.on("pmessage", (pattern, channel, message) => {
 				});
 			})
 		;
+	}
+	if (key === "session_archive") {
+		db.findObjectsAsync('session_archive:'+userid+':*')
+		.then(data => Object.keys(sockets).forEach(sid => sockets[sid].emit('new sessions', data)));
 	}
 });
 
