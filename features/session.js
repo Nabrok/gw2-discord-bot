@@ -8,7 +8,7 @@ var
 
 const session_prefix = 'session';
 const archive_prefix = 'session_archive';
-const relog_window = 300000; // 5 minutes in miliseconds
+const relog_window = 60 /* seconds */ * 60 /* minutes */ * 1000; // 1 hour in milliseconds
 const archive_ttl = 604800; // 7 days in seconds
 
 function resultsToObject(start, key, results) {
