@@ -44,6 +44,7 @@ class Socket {
 				LoadingActions.remove();
 				if (result.error === "Invalid token") return LoginActions.logoutUser();
 				if (result.error) return reject(result.error);
+				if (result.jwt) LoginActions.refresh(result.jwt);
 				resolve(result.data);
 			});
 		});

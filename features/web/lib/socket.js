@@ -102,7 +102,11 @@ function getCommonChannels(userid) {
 
 function verifyJwt(data, socket) {
 	return nJwt.verifyAsync(data.jwt, jwt_secret).then(verifiedJwt => {
-		data.jwt = verifiedJwt;
+		var issued = new Date(verifiedJwt.body.iat * 1000);
+		var time_since_issue = new Date() - issued;
+		if (time_since_issue > 60000)
+			data.jwt = nJwt.create({ sub: verifiedJwt.body.sub }, jwt_secret);
+		else delete data.jwt;
 		data.user = JSON.parse(verifiedJwt.body.sub);
 		if (! socketIdMap[data.user.id]) socketIdMap[data.user.id] = {};
 		socketIdMap[data.user.id][socket.id] = socket;
@@ -112,6 +116,13 @@ function verifyJwt(data, socket) {
 	});
 }
 
+function returnData(jwt, data) {
+	var output = { message: 'success' };
+	if (jwt) output.jwt = jwt.compact();
+	if (data) output.data = data;
+	return output;
+}
+
 function newConnection(socket) {
 	socket.on('Login', (code, cb) => {
 		discordAuth.processLoginAsync(code)
@@ -119,7 +130,7 @@ function newConnection(socket) {
 				if (! socketIdMap[result.id]) socketIdMap[result.id] = {};
 				socketIdMap[result.id][socket.id] = socket;
 				var jwt = nJwt.create({ sub: JSON.stringify(result) }, jwt_secret);
-				cb({ message: 'success', jwt: jwt.compact() });
+				cb(returnData(jwt))
 			})
 			.catch(err => {
 				console.log(err.message);
@@ -131,7 +142,7 @@ function newConnection(socket) {
 	socket.on('get token', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getUserTokenAsync(data.user.id))
-			.then(token => cb({ message: 'success', data: JSON.parse(token) }))
+			.then(token => cb(returnData(data.jwt, JSON.parse(token))))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
@@ -140,7 +151,7 @@ function newConnection(socket) {
 		verifyJwt(data, socket)
 			.then(() => db.getUserTokenAsync(data.user.id))
 			.then(token => JSON.parse(token))
-			.then(token => cb({ message: 'success', data: token.permissions }))
+			.then(token => cb(returnData(data.jwt, token.permissions)))
 			.catch(err => cb({ error: err.message }))
 	});
 
@@ -148,7 +159,7 @@ function newConnection(socket) {
 		verifyJwt(data, socket)
 			.then(() => gw2.request('/v2/tokeninfo', data.data))
 			.then(token => db.setUserKeyAsync(data.user.id, data.data, token))
-			.then(() => cb({ message: 'success' }))
+			.then(() => cb(returnData(data.jwt)))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
@@ -157,7 +168,7 @@ function newConnection(socket) {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
 			.then(key => gw2.request('/v2/characters', key))
-			.then(characters => cb({ message: 'success', data: characters }))
+			.then(characters => cb(returnData(data.jwt, characters)))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
@@ -166,7 +177,7 @@ function newConnection(socket) {
 		verifyJwt(data, socket)
 			.then(() => db.getUserKeyAsync(data.user.id))
 			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data), key))
-			.then(character => cb({ message: 'success', data: character }))
+			.then(character => cb(returnData(data.jwt, character)))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
@@ -174,7 +185,7 @@ function newConnection(socket) {
 	socket.on('get privacy', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => db.getObjectAsync('privacy:'+data.user.id))
-			.then(privacy => cb({ message: 'success', data: privacy }))
+			.then(privacy => cb(returnData(data.jwt, privacy)))
 			.catch(err => cb({ error: err.message }))
 	});
 
@@ -182,7 +193,7 @@ function newConnection(socket) {
 		verifyJwt(data, socket)
 			.then(() => db.getObjectAsync('privacy:'+data.user.id))
 			.then(privacy => db.setObjectAsync('privacy:'+data.user.id, !!privacy ? Object.assign(privacy, data.data) : data.data))
-			.then(() => cb({ message: 'success' }))
+			.then(() => cb(returnData(data.jwt)))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
@@ -190,7 +201,7 @@ function newConnection(socket) {
 	socket.on('get discord servers', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => getCommonServers(data.user.id))
-			.then(servers => cb({ message: 'success', data: servers }))
+			.then(servers => cb(returnData(data.jwt, servers)))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
@@ -200,7 +211,7 @@ function newConnection(socket) {
 			.then(() => db.getUserKeyAsync(data.user.id))
 			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getBuildString(character, data.data.type))
-			.then(string => cb({ message: 'success', data: string }))
+			.then(string => cb(returnData(data.jwt, string)))
 			.catch(err => cb({ error: err.message }))
 	});
 
@@ -214,7 +225,7 @@ function newConnection(socket) {
 				if (! channel) throw new Error("no such channel");
 				channel.sendMessage(string);
 			})
-			.then(() => cb({ message: 'success' }))
+			.then(() => cb(returnData(data.jwt)))
 			.catch(err => cb({ error: err.message }))
 	});
 
@@ -223,7 +234,7 @@ function newConnection(socket) {
 			.then(() => db.getUserKeyAsync(data.user.id))
 			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getEquipString(character))
-			.then(string => cb({ message: 'success', data: string }))
+			.then(string => cb(returnData(data.jwt, string)))
 			.catch(err => cb({ error: err.message }))
 	});
 
@@ -237,7 +248,7 @@ function newConnection(socket) {
 				if (! channel) throw new Error("no such channel");
 				channel.sendMessage(string);
 			})
-			.then(() => cb({ message: 'success' }))
+			.then(() => cb(returnData(data.jwt)))
 			.catch(err => cb({ error: err.message }))
 	});
 
@@ -245,7 +256,7 @@ function newConnection(socket) {
 	socket.on('get discord channels', (data, cb) => {
 		verifyJwt(data, socket)
 			.then(() => getCommonChannels(data.user.id))
-			.then(channels => cb({ message: 'success', data: channels }))
+			.then(channels => cb(returnData(data.jwt, channels)))
 			.catch(err => cb({ error: err.message }))
 		;
 	});
@@ -253,7 +264,7 @@ function newConnection(socket) {
 	socket.on('get sessions', (data, cb) => {
 		verifyJwt(data, socket)
 		.then(() => db.findObjectsAsync('session_archive:'+data.user.id+':*'))
-		.then(data => cb({ message: 'success', data }))
+		.then(sessions => cb(returnData(data.jwt, sessions)))
 		.catch(err => cb({ error: err.message }));
 	});
 

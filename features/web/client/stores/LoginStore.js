@@ -23,6 +23,9 @@ class LoginStore extends BaseStore {
 				this._user = null;
 				this.emitChange();
 				break;
+			case 'REFRESH LOGIN':
+				this._jwt = action.jwt;
+				break;
 		};
 	}
 

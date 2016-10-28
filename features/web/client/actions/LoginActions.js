@@ -13,5 +13,12 @@ export default {
 		localStorage.removeItem('jwt');
 		AppDispatcher.dispatch({ actionType: 'LOGOUT' });
 		browserHistory.push('/get_login');
-	}
+	},
+	refresh: jwt => setTimeout(() => {
+		AppDispatcher.dispatch({
+			actionType: 'REFRESH LOGIN',
+			jwt: jwt
+		});
+		localStorage.setItem('jwt', jwt);
+	}, 1)
 }
