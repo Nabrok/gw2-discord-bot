@@ -1,10 +1,50 @@
 import React from 'react';
-import { Alert, Table, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Alert, DropdownButton, MenuItem, Panel } from 'react-bootstrap';
 import { browserHistory, Link } from 'react-router';
+
+import { randomColor } from '../utils';
 
 import Socket from '../services/WebSocket';
 import TokenStore from '../stores/TokenStore';
 import PrivacyStore from '../stores/PrivacyStore';
+
+class CharacterIcon extends React.Component {
+	render() {
+		var initials = this.props.name.split(/\s+/).splice(0,2).map(s => s.charAt(0)).join('');
+		var backgroundColor = randomColor(this.props.name);
+		return (<li>
+			<Link to={"/characters/"+this.props.name}>
+				<div className="avatarIcon" style={{ backgroundColor }}>{initials}</div>
+				<div className="avatarInfo">{this.props.name}</div>
+			</Link>
+			{ this.props.children && <span>{this.props.children}</span> }
+		</li>);
+	}
+}
+
+class CharacterDisplay extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this._setPrivacy = this._setPrivacy.bind(this);
+	}
+
+	_setPrivacy(privacy) {
+		var data = {};
+		data[this.props.name] = privacy;
+		Socket.send('set privacy', data);
+	}
+
+	render() {
+		return (<CharacterIcon {...this.props}>
+			<DropdownButton bsSize="xsmall" title={this.props.privacy} id={"dropdown-privacy-"+this.props.name} onSelect={this._setPrivacy}>
+				<MenuItem eventKey={1}>Private</MenuItem>
+				<MenuItem eventKey={2}>Guild Only</MenuItem>
+				<MenuItem eventKey={4}>Public</MenuItem>
+			</DropdownButton>
+		</CharacterIcon>);
+	}
+}
 
 export default class Characters extends React.Component {
 	constructor(props) {
@@ -51,7 +91,7 @@ export default class Characters extends React.Component {
 		Socket.send('get characters')
 			.then(characters => this.setState({ characters, characterList: this._characterList(characters) }))
 			.catch(err => {
-				console.log(err);
+				console.log(err.stack);
 			})
 		;
 	}
@@ -67,37 +107,29 @@ export default class Characters extends React.Component {
 		});
 	}
 
-	_setPrivacy(details) {
-		var data = {};
-		data[details.name] = details.privacy;
-		Socket.send('set privacy', data);
-	}
-
 	render() {
+		var private_chars = this.state.characterList.filter(c => c.privacy === 'Private');
+		var guild_chars = this.state.characterList.filter(c => c.privacy === 'Guild Only');
+		var public_chars = this.state.characterList.filter(c => c.privacy === 'Public');
 		return(<div>
 			{ this.state.token.permissions && this.state.token.permissions.indexOf('characters') === -1 && <Alert bsStyle="danger">
 				You do not have the <b>characters</b> permission on your API key.
 			</Alert> }
-			<Table striped bordered condensed hover>
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Privacy</th>
-					</tr>
-				</thead>
-				<tbody>
-					{this.state.characterList.map((c,i) =>
-						<tr key={i}>
-							<td><Link to={"/characters/"+c.name}>{c.name}</Link></td>
-							<td><DropdownButton bsStyle="link" bsSize="xsmall" title={c.privacy} id={"dropdown-privacy-"+i} onSelect={this._setPrivacy}>
-								<MenuItem eventKey={{ name: c.name, privacy: 1 }}>Private</MenuItem>
-								<MenuItem eventKey={{ name: c.name, privacy: 2 }}>Guild Only</MenuItem>
-								<MenuItem eventKey={{ name: c.name, privacy: 4 }}>Public</MenuItem>
-							</DropdownButton></td>
-						</tr>
-					)}
-				</tbody>
-			</Table>
+			{ public_chars.length > 0 && <Panel header="Public Characters">
+				<ul className="avatarContainer">
+					{ public_chars.map((c,i) => <CharacterDisplay key={i} {...c} />) }
+				</ul>
+			</Panel> }
+			{ guild_chars.length > 0 && <Panel header="Guild Only Characters">
+				<ul className="avatarContainer">
+					{ guild_chars.map((c,i) => <CharacterDisplay key={i} {...c} />) }
+				</ul>
+			</Panel> }
+			{ private_chars.length > 0 && <Panel header="Private Characters">
+				<ul className="avatarContainer">
+					{ private_chars.map((c,i) => <CharacterDisplay key={i} {...c} />) }
+				</ul>
+			</Panel> }
 		</div>);
 	}
 }
