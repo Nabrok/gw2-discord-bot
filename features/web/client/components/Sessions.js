@@ -324,8 +324,10 @@ class Session extends React.Component {
 			{session.start_time.toLocaleString()} - {session.stop_time.toLocaleTimeString()}<br/>
 			<br/>
 			<Row>
-				<Col sm={6}><Panel header={<div>Characters</div>} collapsible={true} defaultExpanded={true}><CharactersTab characters={characters} account={account} /></Panel></Col>
-				<Col sm={6}><Panel header="Wallet" collapsible={true} defaultExpanded={true}><WalletTab wallet={wallet} /></Panel></Col>
+				<Col sm={wallet.length === 0 ? 12 : 6}><Panel header={<div>Characters</div>} collapsible={true} defaultExpanded={true}><CharactersTab characters={characters} account={account} /></Panel></Col>
+				{ wallet.length > 0 && <Col sm={6}>
+					<Panel header="Wallet" collapsible={true} defaultExpanded={true}><WalletTab wallet={wallet} /></Panel>
+				</Col> }
 			</Row>
 			<Row>
 				<Col xs={12}><ItemsTab items={items} /></Col>
