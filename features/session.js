@@ -86,8 +86,7 @@ function stopPlaying(user) {
 			var archive = {
 				start_time: session.start.time,
 				stop_time: session.stop.time,
-				diff: diff,
-				snapshot: session.stop.data
+				diff: diff
 			};
 			return db.setObjectAsync(archive_name, archive)
 			.then(() => db.expireObjectAsync(archive_name, archive_ttl))
