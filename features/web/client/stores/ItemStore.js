@@ -27,6 +27,12 @@ class ItemStore extends BaseStore {
 		Gw2Api.request('/v2/items', ids).then(ItemActions.receiveItems);
 	}
 
+	get(ids) {
+		if (! Array.isArray(ids)) ids = [ids];
+		this.retrieveItems(ids);
+		return ids.map(i => this.getItem(parseInt(i)) || {});
+	}
+
 	getItem(id) {
 		return this._items.find(i => id === i.id);
 	}

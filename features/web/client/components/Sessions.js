@@ -148,8 +148,7 @@ class ItemsTab extends React.Component {
 	_getItems(items) {
 		if (! items) return [];
 		var ids = items.map(i => parseInt(i.path[1]));
-		ItemStore.retrieveItems(ids);
-		return ids.map(i => ItemStore.getItem(parseInt(i)) || {});
+		return ItemStore.get(ids);
 	}
 
 	_itemData(d) {
