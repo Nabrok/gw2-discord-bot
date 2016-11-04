@@ -29,6 +29,12 @@ function gatherData(user) {
 			queries.push({ name: 'account', promise: () => gw2.request('/v2/account', key) });
 			queries.push({ name: 'achievements', promise: () => gw2.request('/v2/account/achievements', key) });
 		}
+		if (permissions.indexOf('unlocks') > -1) {
+			queries.push({ name: 'skins', promise: () => gw2.request('/v2/account/skins', key) });
+			queries.push({ name: 'titles', promise: () => gw2.request('/v2/account/titles', key) });
+			queries.push({ name: 'minis', promise: () => gw2.request('/v2/account/minis', key) });
+			queries.push({ name: 'outfits', promise: () => gw2.request('/v2/account/outfits', key) });
+		}
 		if (permissions.indexOf('wallet') > -1) {
 			queries.push({ name: 'wallet', promise: () => gw2.request('/v2/account/wallet', key) });
 		}
