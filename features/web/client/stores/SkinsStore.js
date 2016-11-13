@@ -27,6 +27,12 @@ class SkinsStore extends BaseStore {
 		Gw2Api.request('/v2/skins', ids).then(SkinsActions.receiveSkins);
 	}
 
+	get(ids) {
+		if (! Array.isArray(ids)) ids = [ids];
+		this.retrieveSkins(ids);
+		return ids.map(s => this.getSkin(parseInt(s)) || {});
+	}
+
 	getSkin(id) {
 		return this._skins.find(i => id === i.id);
 	}

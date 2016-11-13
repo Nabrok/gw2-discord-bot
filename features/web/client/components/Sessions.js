@@ -7,6 +7,8 @@ import ItemStore from '../stores/ItemStore';
 import AchievementCategoryStore from '../stores/AchievementCategoryStore';
 import AchievementStore from '../stores/AchievementStore';
 import PriceStore from '../stores/PriceStore';
+import SkinsStore from '../stores/SkinsStore';
+import OutfitStore from '../stores/OutfitStore';
 
 import Item from './partials/Item';
 import Gold from './partials/Gold';
@@ -291,6 +293,90 @@ class AchCounts extends React.Component {
 	}
 }
 
+class Skins extends React.Component {
+	constructor(props) {
+		super(props);
+
+		var skins = this._getSkins(props.skins);
+		this.state = { skins };
+	}
+
+	componentWillReceiveProps(newProps) {
+		var skins = this._getSkins(newProps.skins);
+		this.setState({ skins });
+	}
+
+	componentDidMount() {
+		this._skinListener = this._skinChanges.bind(this);
+		SkinsStore.addChangeListener(this._skinListener);
+	}
+
+	componentWillUnmount() {
+		SkinsStore.removeChangeListener(this._skinListener);
+	}
+
+	_skinChanges() {
+		var skins = this._getSkins(this.props.skins);
+		this.setState({ skins });
+	}
+
+	_getSkins(skins) {
+		if (! skins) return [];
+		var ids = skins.map(s => parseInt(s.path[1]));
+		return SkinsStore.get(ids);
+	}
+
+	render() {
+		return (<div>
+			{this.state.skins.map((s,i) => <div key={i} style={{position: 'relative', display: 'inline-block'}} title={s.name}>
+				<img className={s.rarity+' largeItem'} src={s.icon} />
+			</div>)}
+		</div>);
+	}
+}
+
+class Outfits extends React.Component {
+	constructor(props) {
+		super(props);
+
+		var outfits = this._getOutfits(props.outfits);
+		this.state = { outfits };
+	}
+
+	componentWillReceiveProps(newProps) {
+		var outfits = this._getOutfits(newProps.outfits);
+		this.setState({ outfits });
+	}
+
+	componentDidMount() {
+		this._outfitListener = this._outfitChanges.bind(this);
+		OutfitStore.addChangeListener(this._outfitListener);
+	}
+
+	componentWillUnmount() {
+		OutfitStore.removeChangeListener(this._outfitListener);
+	}
+
+	_outfitChanges() {
+		var outfits = this._getOutfits(this.props.outfits);
+		this.setState({ outfits });
+	}
+
+	_getOutfits(outfits) {
+		if (! outfits) return [];
+		var ids = outfits.map(o => parseInt(o.path[1]));
+		return OutfitStore.get(ids);
+	}
+
+	render() {
+		return (<div>
+			{this.state.outfits.map((o,i) => <div key={i} style={{position: 'relative', display: 'inline-block'}} title={o.name}>
+				<img className={o.rarity+' largeItem'} src={o.icon} />
+			</div>)}
+		</div>);
+	}
+}
+
 class Session extends React.Component {
 	constructor(props) {
 		super(props);
@@ -307,6 +393,12 @@ class Session extends React.Component {
 
 	render() {
 		var session = this.props.session;
+		var skins = session.diff.filter(d => d.path[0] === "skins");
+		var titles = session.diff.filter(d => d.path[0] === "titles");
+		var minis = session.diff.filter(d => d.path[0] === "minis");
+		var outfits = session.diff.filter(d => d.path[0] === "outfits");
+		var dyes = session.diff.filter(d => d.path[0] === "dyes");
+		var finishers = session.diff.filter(d => d.path[0] === "finishers");
 		var account = session.diff.filter(d => d.path[0] === "account");
 		var characters = session.diff.filter(d => d.path[0] === "characters");
 		var wallet = session.diff.filter(d => d.path[0] === "wallet");
@@ -315,10 +407,15 @@ class Session extends React.Component {
 		var wvw_achievements = session.diff.filter(d => d.path[0] === "achievements" && this.state.wvw_achievement_ids.indexOf(parseInt(d.path[1])) > -1 && d.path[2] === "current");
 		var pvp_achievements = session.diff.filter(d => d.path[0] === "achievements" && this.state.pvp_achievement_ids.indexOf(parseInt(d.path[1])) > -1 && d.path[2] === "current");
 		var ach_counts = [];
+		var unlocks = [];
 		if (wvw_achievements.length > 0)
 			ach_counts.push(<Panel header="World vs World" collapsible={true} defaultExpanded={true}><AchCounts achievements={wvw_achievements} /></Panel>);
 		if (pvp_achievements.length > 0)
 			ach_counts.push(<Panel header="Player vs Player" collapsible={true} defaultExpanded={true}><AchCounts achievements={pvp_achievements} /></Panel>);
+		if (skins.length > 0)
+			unlocks.push(<Panel header="Skins" collapsible={true} defaultExpanded={true}><Skins skins={skins} /></Panel>);
+		if (outfits.length > 0)
+			unlocks.push(<Panel header="Outfits" collapsible={true} defaultExpanded={true}><Outfits outfits={outfits} /></Panel>);
 		return(<div>
 			{session.start_time.toLocaleString()} - {session.stop_time.toLocaleTimeString()}<br/>
 			<br/>
@@ -337,6 +434,14 @@ class Session extends React.Component {
 			{ ach_counts.length > 0 && <Row>
 				{ ach_counts.map((a,i) => <Col key={i} xs={12 / ach_counts.length }>{a}</Col>) }
 			</Row> }
+			{ unlocks.length > 0 && unlocks.reduce((total, u) => {
+				if (total[total.length - 1].length < 3)
+					total[total.length - 1].push(u);
+				else total.push([[u]]);
+				return total;
+			}, [[]]).map((row, ri) => <Row key={ri}>
+				{ row.map((u,i) => <Col key={i} xs={12 / row.length}>{u}</Col>) }
+			</Row>) }
 		</div>);
 	}
 }
