@@ -34,6 +34,8 @@ function gatherData(user) {
 			queries.push({ name: 'titles', promise: () => gw2.request('/v2/account/titles', key) });
 			queries.push({ name: 'minis', promise: () => gw2.request('/v2/account/minis', key) });
 			queries.push({ name: 'outfits', promise: () => gw2.request('/v2/account/outfits', key) });
+			queries.push({ name: 'dyes', promise: () => gw2.request('/v2/account/dyes', key) });
+			queries.push({ name: 'finishers', promise: () => gw2.request('/v2/account/finishers', key) });
 		}
 		if (permissions.indexOf('wallet') > -1) {
 			queries.push({ name: 'wallet', promise: () => gw2.request('/v2/account/wallet', key) });
@@ -112,10 +114,17 @@ function getSessionDiff(session) {
 	// Rearrange some arrays into key/value pairs by id (makes it easier to diff)
 	['start', 'stop'].forEach(t => {
 		if (! session[t]) return;
-		['wallet', 'achievements'].forEach(d => {
+		['wallet', 'achievements', 'finishers'].forEach(d => {
 			if (! session[t].data[d]) return;
 			session[t].data[d] = session[t].data[d].reduce((total, i) => {
 				total[i.id] = i;
+				return total;
+			}, {});
+		});
+		['skins', 'titles', 'minis', 'outfits', 'dyes'].forEach(d => {
+			if (! session[t].data[d]) return;
+			session[t].data[d] = session[t].data[d].reduce((total, i) => {
+				total[i] = true;
 				return total;
 			}, {});
 		});
