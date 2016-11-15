@@ -9,6 +9,7 @@ import AchievementStore from '../stores/AchievementStore';
 import PriceStore from '../stores/PriceStore';
 import SkinsStore from '../stores/SkinsStore';
 import OutfitStore from '../stores/OutfitStore';
+import ColorStore from '../stores/ColorStore';
 
 import Item from './partials/Item';
 import Gold from './partials/Gold';
@@ -377,6 +378,49 @@ class Outfits extends React.Component {
 	}
 }
 
+class Dyes extends React.Component {
+	constructor(props) {
+		super(props);
+
+		var dyes = this._getDyes(props.dyes);
+		this.state = { dyes };
+	}
+
+	componentWillReceiveProps(newProps) {
+		var dyes = this._getDyes(newProps.dyes);
+		this.setState({ dyes });
+	}
+
+	componentDidMount() {
+		this._dyeListener = this._dyeChanges.bind(this);
+		ColorStore.addChangeListener(this._dyeListener);
+	}
+
+	componentWillUnmount() {
+		ColorStore.removeChangeListener(this._dyeListener);
+	}
+
+	_dyeChanges() {
+		var dyes = this._getDyes(this.props.dyes);
+		this.setState({ dyes });
+	}
+
+	_getDyes(dyes) {
+		if (! dyes) return [];
+		var ids = dyes.map(d => parseInt(d.path[1]));
+		return ColorStore.get(ids);
+	}
+
+	render() {
+		return (<div>
+			{this.state.dyes.filter(d => !!d.id).map((d,i) => <div key={i} style={{position: 'relative', display: 'inline-block'}} title={d.name}>
+				<div className={'largeItem '+d.categories[2]} style={{backgroundColor: 'rgb('+d.cloth.rgb.join(',')+')'}}></div>
+				{d.name}
+			</div>)}
+		</div>);
+	}
+}
+
 class Session extends React.Component {
 	constructor(props) {
 		super(props);
@@ -416,6 +460,8 @@ class Session extends React.Component {
 			unlocks.push(<Panel header="Skins" collapsible={true} defaultExpanded={true}><Skins skins={skins} /></Panel>);
 		if (outfits.length > 0)
 			unlocks.push(<Panel header="Outfits" collapsible={true} defaultExpanded={true}><Outfits outfits={outfits} /></Panel>);
+		if (dyes.length > 0)
+			unlocks.push(<Panel header="Dyes" collapsible={true} defaultExpanded={true}><Dyes dyes={dyes} /></Panel>);
 		return(<div>
 			{session.start_time.toLocaleString()} - {session.stop_time.toLocaleTimeString()}<br/>
 			<br/>

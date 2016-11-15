@@ -41,20 +41,20 @@ img.item {
 	height: 32px;
 }
 
-img.largeItem {
+.largeItem {
 	border: 2px solid #888;
 	width: 64px;
 	height: 64px;
 }
 
-img.Legendary { border-color: #4c139d; }
-img.Ascended { border-color: #fb3e8d; }
-img.Exotic { border-color: #ffa405; }
-img.Rare { border-color: #fcd00b; }
-img.Masterwork { border-color: #1a9306; }
-img.Fine { border-color: #62a4da; }
-img.Basic { border-color: #000000; }
-img.Junk { border-color: #aaaaaa; }
+img.Legendary, div.Legendary { border-color: #4c139d; }
+img.Ascended, div.Ascended { border-color: #fb3e8d; }
+img.Exotic, div.Exotic { border-color: #ffa405; }
+img.Rare, div.Rare { border-color: #fcd00b; }
+img.Masterwork, div.Masterwork { border-color: #1a9306; }
+img.Fine, div.Fine { border-color: #62a4da; }
+img.Basic, div.Basic { border-color: #000000; }
+img.Junk, div.Junk { border-color: #aaaaaa; }
 
 div.spec_line {
 	width: 647px;
