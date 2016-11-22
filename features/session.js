@@ -73,6 +73,10 @@ function startPlaying(user) {
 		.then(data => {
 			session.start.data = data;
 			return db.setObjectAsync(session_name, session);
+		})
+		.catch(err => {
+			if (err.message === "endpoint requires authentication") return;
+			console.error(err.stack);
 		});
 	});
 }
@@ -98,6 +102,10 @@ function stopPlaying(user) {
 			};
 			return db.setObjectAsync(archive_name, archive)
 			.then(() => db.expireObjectAsync(archive_name, archive_ttl))
+		})
+		.catch(err => {
+			if (err.message === "endpoint requires authentication") return;
+			console.error(err.stack);
 		});
 	});
 }
@@ -258,6 +266,10 @@ function parseSession(user) {
 			}
 			return sentences.join("  ");
 		});
+	})
+	.catch(err => {
+		if (err.message === "endpoint requires authentication") return;
+		console.error(err.stack);
 	});
 }
 
