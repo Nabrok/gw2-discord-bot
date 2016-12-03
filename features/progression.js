@@ -18,6 +18,15 @@ function messageReceived(message) {
 		},
 		function(next) { db.getUserKey(message.author.id, next) },
 		function(key, next) { if (! key) return next(); gw2.request('/v2/account', key, next) },
+		function(result, next) {
+			if (message.content.match(new RegExp('^!'+wvw_cmd+'$', 'i')))
+				gw2.getWvwRankName(result.wvw_rank).then(rank_name => {
+					result.wvw_rank_name = rank_name;
+					next(null, result);
+				});
+			else
+				next(null, result);
+		}
 	], function(err, result) {
 		message.channel.stopTyping(function() {
 			if (err) {
@@ -36,7 +45,7 @@ function messageReceived(message) {
 			if (message.content.match(new RegExp('^!'+fractal_cmd+'$', 'i')))
 					message.reply(phrases.get("PROGRESSION_FRACTAL_LEVEL", { level: result.fractal_level }));
 			else if (message.content.match(new RegExp('^!'+wvw_cmd+'$', 'i')))
-					message.reply(phrases.get("PROGRESSION_WVW_RANK", { rank: result.wvw_rank }));
+					message.reply(phrases.get("PROGRESSION_WVW_RANK", { rank: result.wvw_rank, title: result.wvw_rank_name }));
 		});
 	});
 }
