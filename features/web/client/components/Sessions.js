@@ -84,10 +84,11 @@ class WalletTab extends React.Component {
 			<tbody>
 			{ this.props.wallet.map((c,i) => {
 				var currency = this.state.currencies.find(cur => cur.id === parseInt(c.path[1])) || {};
+				var value = (c.kind === "E") ? c.rhs - c.lhs : c.rhs.value;
 				return (<tr key={i}>
 					<td><img src={currency.icon} height="25px" /> {currency.name}</td>
 					<td style={{ textAlign: 'right' }}>
-						{ currency.name === "Coin" ? <Gold coins={c.rhs - c.lhs} /> : (c.rhs - c.lhs).toLocaleString() }
+						{ currency.name === "Coin" ? <Gold coins={value} /> : value.toLocaleString() }
 					</td>
 				</tr>);
 			}) }
