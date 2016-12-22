@@ -105,6 +105,7 @@ function stopPlaying(user) {
 		})
 		.catch(err => {
 			if (err.message === "endpoint requires authentication") return;
+			if (err.message === "no session") throw err; // rethrow
 			console.error(err.stack);
 		});
 	});
@@ -269,6 +270,7 @@ function parseSession(user) {
 	})
 	.catch(err => {
 		if (err.message === "endpoint requires authentication") return;
+		if (err.message === "no session") throw err;
 		console.error(err.stack);
 	});
 }
@@ -296,8 +298,14 @@ function presenceChanged(oldState, newState) {
 		stopPlaying(newState).then(() => {
 			// Refresh data in 5 minutes to make sure we don't have old cached data
 			setTimeout(function() {
-				stopPlaying(newState);
+				stopPlaying(newState).catch(err => {
+					if (err.message === "no session") return;
+					console.error(err.stack);
+				});
 			}, 305000);
+		}).catch(err => {
+			if (err.message === "no session") return;
+			console.error(err.stack);
 		});
 	}
 }
