@@ -13,6 +13,7 @@ gw2.setLanguage(language);
 
 console.log('Use this link to add the bot to a discord server: https://discordapp.com/oauth2/authorize?client_id='+config.get('discord.clientid')+'&scope=bot&permissions=8');
 var bot = new Discord.Client({ autoReconnect: true });
+bot.setMaxListeners(Infinity);
 
 if (features.indexOf("link") === -1) features.unshift("link");
 features.forEach(feature => {
