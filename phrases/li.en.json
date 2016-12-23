@@ -1,0 +1,5 @@
+{
+	"LI_CMD": "li",
+	"LI_HELP": "**__Legendary Insights__**\n\n`!li` - Display the number of Legendary Insights you own.",
+	"LI_SHOW": "You have %{count} Legendary Insights."
+}
