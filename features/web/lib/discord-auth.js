@@ -9,7 +9,7 @@ var client_secret = config.get('discord.client_secret');
 var protocol = config.has('web.protocol') ? config.get('web.protocol') : 'http';
 var http_port = config.get('web.port');
 var domain = config.get('web.domain');
-var public_url = config.has('web.public_url') ? config.get('web.public_url') : protocol+"://"+domain+(((protocol === "http" && port !== "80") || (protocol === "https" && http_port !== "443")) ? ":"+http_port : "");
+var public_url = config.has('web.public_url') ? config.get('web.public_url') : protocol+"://"+domain+(((protocol === "http" && http_port !== "80") || (protocol === "https" && http_port !== "443")) ? ":"+http_port : "");
 
 var auth = {};
 
