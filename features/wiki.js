@@ -8,9 +8,6 @@ const
 	phrases = require("../lib/phrases");
 
 const ttl = 1000 * 60 * 60; // Cache wiki responses for an hour to prevent flooding the wiki with requests with the same search terms
-const wiki = new MWBot({
-	apiUrl: "https://wiki.guildwars2.com/api.php"
-});
 
 function htmlToMessage(html) {
 	return toMarkdown(html, {
@@ -27,19 +24,55 @@ function htmlToMessage(html) {
 	});
 }
 
+/**
+ * gets the localization suffix to add to the wiki subdomain
+ * for localized researches
+ * @param  {string} lang the lang we want a suffix for
+ * @return {string}      the suffix to add to the subdomain
+ */
+function getWikiLang(lang) {
+  // if lang is empty, get the lang set in config file
+  if (lang == '') {
+    lang = config.has('features.language') ? config.get('features.language') : "en";
+  }
+
+  var langSuffix = '';
+  switch (lang.toLowerCase()) {
+    case 'fr':
+      langSuffix = '-fr';
+      break;
+    case 'de':
+      langSuffix = '-de';
+      break;
+    case 'es':
+    	langSuffix = '-es';
+			break;
+    default:
+    break;
+  }
+
+  return langSuffix;
+}
+
 function messageReceived(message) {
 	const messageAsync = Promise.promisifyAll(message);
 	const channelAsync = Promise.promisifyAll(message.channel);
 
 	let match;
-	if (match = message.content.match(new RegExp(`^!${phrases.get("WIKI_WIKI")} ?(.*)?$`, "i"))) {
-		const terms = match[1];
+	if (match = message.content.match(new RegExp(`^!${phrases.get("WIKI_WIKI")}-?([a-zA-Z]*) ?(.*)?$`, "i"))) {
+    const lang = match[1];
+    const terms = match[2];
+    var wikiLang = getWikiLang(lang);
+    const wiki = new MWBot({
+    	apiUrl: `https://wiki${wikiLang}.guildwars2.com/api.php`
+    });
+
 		channelAsync.startTypingAsync()
 			.then(() => {
 				if (!terms) throw new Error("no title");
 
 				// Get cache if it exists
-				return db.getCachedResponseAsync("wiki", terms).then(cache => {
+				return db.getCachedResponseAsync("wiki" + wikiLang, terms).then(cache => {
 					if (typeof cache === "string") return cache;
 
 					// Only search if we have something to search for
@@ -92,12 +125,12 @@ function messageReceived(message) {
 
 					// Construct message
 					text = htmlToMessage(text).split("\n")[0].trim();
-					const url = encodeURI(`https://wiki.guildwars2.com/wiki/${title}`);
+					const url = encodeURI(`https://wiki${wikiLang}.guildwars2.com/wiki/${title}`);
 					if (text) text += "\n\n" + phrases.get("WIKI_MORE", { url });
 					else text = phrases.get("WIKI_LINK", { title, url });
 
 					// Cache it
-					return db.saveCachedResponseAsync("wiki", terms, text, ttl).return(text);
+					return db.saveCachedResponseAsync("wiki" + wikiLang, terms, text, ttl).return(text);
 				}
 				throw new Error("not found"); // No results
 			})
@@ -107,7 +140,7 @@ function messageReceived(message) {
 					case "not found":
 						const text = phrases.get("WIKI_NOT_FOUND");
 						// Cache it
-						return db.saveCachedResponseAsync("wiki", terms, text, ttl).return(text);
+						return db.saveCachedResponseAsync("wiki" + wikiLang, terms, text, ttl).return(text);
 					case "no title":
 						return phrases.get("WIKI_NO_TERM");
 					default:
