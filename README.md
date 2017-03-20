@@ -22,6 +22,10 @@ This feature can not be disabled.  This allows users to identify themselves to t
 
 The ranks feature will create discord roles for each rank your guild has in-game and will keep your members in the appropriate rank.
 
+### World Roles
+
+The world_role feature will assign each user to a role for the world their Guild Wars 2 account is on.
+
 ### Message of the Day (motd)
 
 This will apply your guild message of the day to the description of a channel in discord. Changes are checked for every hour, or you can force a manual update by sending "refresh motd" to the bot in a direct message (note that it may take up to 5 minutes for changes to appear on the API).
