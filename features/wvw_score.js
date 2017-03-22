@@ -71,6 +71,7 @@ function messageReceived(message) {
 					color: color,
 					names: names[color],
 					score: match.scores[color],
+					victory_points: match.victory_points[color],
 					ppt: countPPT(match, color),
 					kills: match.kills[color],
 					deaths: match.deaths[color]
@@ -83,7 +84,7 @@ function messageReceived(message) {
 		var result;
 		if (scores) {
 			if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
-				result = scores.sort((a, b) => (b.score - a.score)).map(world => (formatWorldNames(world.names, world.color)+': '+world.score.toLocaleString()+' (+'+world.ppt+')')).join("\n");
+				result = scores.sort((a, b) => (b.victory_points - a.victory_points)).map(world => (formatWorldNames(world.names, world.color)+': '+world.victory_points.toLocaleString()+' (+'+world.ppt+')')).join("\n");
 			else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
 				result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (formatWorldNames(world.names, world.color)+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
 			else if (message.content.match(new RegExp('^!'+relscore_cmd+'$', 'i'))) {
