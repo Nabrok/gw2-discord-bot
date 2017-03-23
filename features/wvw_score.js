@@ -1,7 +1,7 @@
 var
-	async = require('async'),
+	Promise = require('bluebird'),
 	config = require('config'),
-	db = require('../lib/db'),
+	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
 	phrases = require('../lib/phrases')
 ;
@@ -47,20 +47,13 @@ function messageReceived(message) {
 	var relscore_cmd = phrases.get("WVWSCORE_RELSCORE");
 	var kd_cmd = phrases.get("WVWSCORE_KD");
 	if (! message.content.match(new RegExp('^!('+score_cmd+'|'+relscore_cmd+'|'+kd_cmd+')$', 'i'))) return;
-	async.waterfall([
-		function(next) { message.channel.startTyping(next); },
-		function(something, next) { db.getAccountByUser(message.author.id, next); },
-		function(account, next) {
-			if (account && account.world) return next(null, account.world);
-			next(null, guild_world);
-		},
-		function(world, next) {
-			gw2.request('/v2/wvw/matches?world='+world, null, next, { ttl: 5000 });
-		},
-		function(match, next) {
+	message.channel.startTyping();
+	db.getAccountByUserAsync(message.author.id)
+		.then(account => (account && account.world) ? account.world : guild_world)
+		.then(world => gw2.request('/v2/wvw/matches?world='+world, null, null, { ttl: 5000 }))
+		.then(match => {
 			var world_ids = [].concat.apply([], Object.keys(match.all_worlds).map(c => match.all_worlds[c]));
-			gw2.getWorlds(world_ids, function(err, worlds) {
-				if (err) return next(err);
+			return gw2.getWorlds(world_ids).then(worlds => {
 				var names = {};
 				var colors = Object.keys(match.all_worlds);
 				for (var c in colors) {
@@ -76,28 +69,23 @@ function messageReceived(message) {
 					kills: match.kills[color],
 					deaths: match.deaths[color]
 				}));
-				next(null, scores);
+				if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
+					result = scores.sort((a, b) => (b.victory_points - a.victory_points)).map(world => (formatWorldNames(world.names, world.color)+': '+world.victory_points.toLocaleString()+' (+'+world.ppt+')')).join("\n");
+				else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
+					result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (formatWorldNames(world.names, world.color)+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
+				else if (message.content.match(new RegExp('^!'+relscore_cmd+'$', 'i'))) {
+					var sorted = scores.sort((a, b) => (b.score - a.score));
+					result = sorted.map((world, index) => (formatWorldNames(world.names, world.color)+': '+((index === 0) ? world.score : world.score - sorted[index - 1].score).toLocaleString() +' (+'+world.ppt+')')).join("\n");
+				}
+				return message.reply("```"+result+"```");
 			});
-		}
-	], function(err, scores) {
-		if (err) console.log(err.message);
-		var result;
-		if (scores) {
-			if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
-				result = scores.sort((a, b) => (b.victory_points - a.victory_points)).map(world => (formatWorldNames(world.names, world.color)+': '+world.victory_points.toLocaleString()+' (+'+world.ppt+')')).join("\n");
-			else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
-				result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (formatWorldNames(world.names, world.color)+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
-			else if (message.content.match(new RegExp('^!'+relscore_cmd+'$', 'i'))) {
-				var sorted = scores.sort((a, b) => (b.score - a.score));
-				result = sorted.map((world, index) => (formatWorldNames(world.names, world.color)+': '+((index === 0) ? world.score : world.score - sorted[index - 1].score).toLocaleString() +' (+'+world.ppt+')')).join("\n");
-			}
-		} else {
-			result = phrases.get("WVWSCORE_ERROR");
-		}
-		message.channel.stopTyping(function() {
-			message.reply("```"+result+"```");
-		});
-	});
+		})
+		.catch(e => {
+			console.error(e.stack);
+			return phrases.get("WVWSCORE_ERROR");
+		})
+		.then(() => message.channel.stopTyping())
+	;
 }
 
 module.exports = function(bot) {
