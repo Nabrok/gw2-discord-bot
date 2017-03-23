@@ -14,20 +14,17 @@ var convert_urls = config.has('guild.motd_convert_urls') ? config.get('guild.mot
 var excluded_subdomains = config.has('guild.motd_excluded_subdomains') ? config.get('guild.motd_excluded_subdomains') : [];
 
 function messageReceived(message) {
-	if (! message.channel.isPrivate) return;
+	if (message.channel.type !== 'dm') return;
 	if (message.content.match(new RegExp("^!?"+phrases.get("MOTD_REFRESH")+'$', 'i'))) {
-		message.channel.startTyping(function() {
-			gw2.request('/v2/guild/'+guild_id+'/log', guild_key, function(err) {
-				message.channel.stopTyping(function() {
-					if (err) {
-						message.reply(phrases.get("CORE_ERROR"));
-						console.log(err.message);
-						return;
-					}
-					message.reply(phrases.get("MOTD_UPDATED"));
-				});
-			});
-		});
+		message.channel.startTyping();
+		gw2.request('/v2/guild/'+guild_id+'/log', guild_key)
+			.then(() => message.reply(phrases.get("MOTD_UPDATED")))
+			.catch(err => {
+				console.error(err.message);
+				return message.reply(phrases.get("CORE_ERROR"));
+			})
+			.then(() => message.channel.stopTyping())
+		;
 	}
 }
 
@@ -63,8 +60,10 @@ module.exports = function(bot) {
 			});
 		}
 
-		var channels = bot.channels.getAll('name', channel_name);
-		channels.forEach(channel => bot.setChannelTopic(channel, text));
+		Promise.all(bot.guilds.map(server => {
+			var channel = server.channels.find('name', channel_name);
+			return channel.setTopic(text);
+		})).catch(e => console.error(e.stack));
 	});
 
 	bot.on("message", messageReceived);
