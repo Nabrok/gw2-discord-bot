@@ -1,7 +1,8 @@
 var
+	Promise = require('bluebird'),
 	async = require('async'),
 	config = require('config'),
-	db = require('../lib/db'),
+	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
 	phrases = require('../lib/phrases')
 ;
@@ -21,80 +22,82 @@ function requestAPIKey(user) {
 		code: code,
 		user: user
 	};
-	user.sendMessage(phrases.get("LINK_REPLY_WITH_KEY", { code: code }));
 	// Remove code in 5 minutes
 	setTimeout(function() { delete open_codes[user.id]; }, 5 * 60 * 1000);
+	return user.sendMessage(phrases.get("LINK_REPLY_WITH_KEY", { code: code }));
 }
 
-function checkUserAccount(user, callback) {
-	if (! callback) callback = function() {};
+function checkUserAccount(user) {
 	var bot = user.client;
-	async.waterfall([
-		function(next) { db.getUserKey(user.id, next) },
-		function(key, next) { if (! key) return next(); gw2.request('/v2/account', key, next) },
-	], function(err, account) {
-		if (err) {
-			console.log(err);
-		}
-		if (err && (err.message === 'endpoint requires authentication' || err.message === 'invalid key')) {
-			console.log('removing user '+user.id);
-			// Invalid/deleted key - remove everything
-			async.parallel([
-				function(next) { db.removeUser(user.id, next); },
-				function(next) {
-					if (! world_role_name) return next();
-					async.each(bot.servers, function(s, next_server) {
-						var world_role = s.roles.get('name', world_role_name);
-						if (user.hasRole(world_role)) user.removeFrom(world_role, next_server)
-						else next_server();
-					}, next);
-				}
-			], function(err) {
-				callback(null, false);
-				if (guild_role_name) gw2.request('/v2/guild/'+guild_id+'/members', guild_key);
-			});
-			return;
-		}
-		if (! account) {
-			callback(null, false);
-			return;
-		}
-		var in_guild = (account.guilds.indexOf(guild_id) > -1);
-		db.setUserAccount(user.id, account, function(err) {
-			async.each(bot.servers, function(s, next_server) {
-				async.parallel([
-					function(next) {
-						if (! world_role_name) return next();
-						var world_role = s.roles.get('name', world_role_name);
-						// Add or remove from guild world role
-						if (account.world !== world_id && user.hasRole(world_role)) {
-							user.removeFrom(world_role, next);
-						}
-						else if (account.world === world_id && ! user.hasRole(world_role)) {
-							user.addTo(world_role, next);
-						}
-						else next();
-					},
-					function(next) {
-						// Add or remove from member role
-						if (! guild_role_name) return next();
-						var guild_role = s.roles.get('name', guild_role_name);
-						if (in_guild && ! user.hasRole(guild_role)) user.addTo(guild_role, next);
-						else if (user.hasRole(guild_role) && ! in_guild) user.removeFrom(guild_role, next);
-						else next();
+	return db.getUserKeyAsync(user.id)
+		.then(key => {
+			if (! key) throw new Error('no key');
+			return gw2.request('/v2/account', key)
+		})
+		.then(account => {
+			var in_guild = (account.guilds.indexOf(guild_id) > -1);
+			return db.setUserAccountAsync(user.id, account).then(() => {
+				var add_roles = [];
+				var del_roles = [];
+				bot.guilds.forEach(server => {
+					var guser = server.members.get(user.id);
+					if (! guser) return;
+					if (world_role_name) {
+						var world_role = server.roles.find('name', world_role_name);
+						if (account.world !== world_id && guser.roles.has(world_role.id))
+							del_roles.push(world_role);
+						else if (account.world === world_id && ! guser.roles.has(world_role.id))
+							add_roles.push(world_role);
 					}
-				], next_server);
-			}, function(err) {
-				// Update the member list
-				if (guild_role_name) gw2.request('/v2/guild/'+guild_id+'/members', guild_key);
-				callback(null, true);
+					if (guild_role_name) {
+						var guild_role = server.roles.find('name', guild_role_name);
+						if (in_guild && ! guser.roles.has(guild_role.id))
+							add_roles.push(guild_role);
+						else if (guser.roles.has(guild_role.id) && ! in_guild)
+							del_roles.push(guild_role);
+					}
+				});
+				var promises = [];
+				if (add_roles.length > 0) promises.push(user.addRoles(add_roles));
+				if (del_roles.length > 0) promises.push(user.removeRoles(del_roles));
+				return Promise.all(promises);
 			});
+		})
+		.catch(err => {
+			if (err.message === 'endpoint requires authentication' || err.message === 'invalid key') {
+				console.log('removing user '+user.id);
+				var removeRoles = [];
+				bot.guilds.forEach(server => {
+					var guser = server.members.get(user.id);
+					if (! guser) return;
+					if (world_role_name) {
+						var world_role = server.roles.find('name', world_role_name);
+						removeRoles.push(world_role);
+					}
+					if (guild_role_name) {
+						var guild_role = server.roles.find('name', guild_role_name);
+						removeRoles.push(guild_role);
+					}
+				});
+				var promises = [ db.removeUserAsync(user.id) ];
+				if (removeRoles.length > 0) promises.push(user.removeRoles(removeRoles));
+				return Promises.all(promises);
+			}
+			throw err;
+		})
+		.then(() => {
+			if (guild_key && guild_id)
+				return gw2.request('/v2/guild/'+guild_id+'/members', guild_key);
+		})
+		.catch(err => {
+			if (err.message === 'no key') return;
+			console.error(err.stack);
 		});
-	});
+	;
 }
 
 function messageReceived(message) {
-	if (message.channel.isPrivate) {
+	if (message.channel.type === 'dm') {
 		if (message.content.match(new RegExp('^!?'+phrases.get("LINK_LINK")+'$', 'i'))) {
 			// User wants to change API key
 			requestAPIKey(message.author);
@@ -107,30 +110,31 @@ function messageReceived(message) {
 				message.channel.startTyping();
 				// We have one, test it.
 				var key = match[0];
-				gw2.request('/v2/tokeninfo', key, function(err, token) {
-					message.channel.stopTyping();
-					if (err) {
-						console.log(err);
-						message.reply(phrases.get("LINK_ERROR"));
-						return;
-					}
+				gw2.request('/v2/tokeninfo', key).then(token => {
 					if (! token.name.match(oc.code)) {
-						message.reply(phrases.get("LINK_KEY_DOESNT_MATCH", { code: oc.code }));
-						return;
+						return message.reply(phrases.get("LINK_KEY_DOESNT_MATCH", { code: oc.code }));
 					}
 					var permissions = token.permissions.map((p) => '**'+p+'**').join(', ');
-					db.setUserKey(message.author.id, key, token, function(err) {
-						message.reply(phrases.get("LINK_KEY_DETAILS", { name: token.name, permissions: permissions }));
-						delete open_codes[message.author.id];
-						checkUserAccount(message.author);
-					});
-				});
+					return db.setUserKeyAsync(message.author.id, key, token)
+						.then(() => message.reply(phrases.get("LINK_KEY_DETAILS", { name: token.name, permissions: permissions })))
+						.then(() => {
+							delete open_codes[message.author.id];
+							return checkUserAccount(message.author);
+						})
+					;
+				}).catch(err => {
+					console.error(err.stack);
+					return message.reply(phrases.get("LINK_ERROR"));
+				}).then(() => message.channel.stopTyping());
 			}
 		}
 		if (message.content === "showtoken") {
-			db.getUserToken(message.author.id, (err, token) => {
-				message.reply('```'+token+'```');
-			});
+			message.channel.startTyping();
+			db.getUserTokenAsync(message.author.id)
+				.then(token => message.reply('```'+token+'```'))
+				.catch(e => console.error(e.stack))
+				.then(() => message.channel.stopTyping())
+			;
 		}
 		if (message.content === "account") {
 			checkUserAccount(message.author);
@@ -139,37 +143,27 @@ function messageReceived(message) {
 }
 
 function presenceChanged(oldUser, newUser) {
-	if (oldUser.status !== 'online' && newUser.status === 'online') checkUserAccount(newUser);
+	if (oldUser.presence.status !== 'online' && newUser.presence.status === 'online')
+		checkUserAccount(newUser);
 }
 
-function newMember(server, user) {
-	checkUserAccount(user, function(err, hasAccount) {
-		if (! hasAccount) user.sendMessage(phrases.get("LINK_WELCOME"));
-	});
-}
-
-function initServer(server, callback) {
-	if (! callback) callback = function() { };
-	async.parallel([
-		function(next) {
-			if (! guild_role_name) return next();
-			if (server.roles.has('name', guild_role_name)) next();
-			else server.createRole({
-				name: guild_role_name,
-				hoist: false,
-				mentionable: true
-			}, next);
-		},
-		function(next) {
-			if (! world_role_name) return next();
-			if (server.roles.has('name', world_role_name)) next();
-			else server.createRole({
-				name: world_role_name,
-				hoist: false,
-				mentionable: true
-			}, next);
-		}
-	], callback);
+function initServer(server) {
+	var promises = [];
+	if (guild_role_name && ! server.roles.exists('name', guild_role_name)) {
+		promises.push(server.createRole({
+			name: guild_role_name,
+			hoist: false,
+			mentionable: true
+		}));
+	}
+	if (world_role_name && ! server.roles.exists('name', world_role_name)) {
+		promises.push(server.createRole({
+			name: world_role_name,
+			hoist: false,
+			mentionable: true
+		}));
+	}
+	return Promise.all(promises);
 }
 
 gw2.on('/v2/account', (account, key, from_cache) => {
@@ -179,11 +173,10 @@ gw2.on('/v2/account', (account, key, from_cache) => {
 
 module.exports = function(bot) {
 	bot.on("message", messageReceived);
-	bot.on("presence", presenceChanged);
-	//bot.on("serverNewMember", newMember);
+	bot.on("presenceUpdate", presenceChanged);
 	bot.on("serverCreated", initServer);
 
 	bot.on("ready", function() {
-		async.each(bot.servers, initServer);
+		Promise.all(bot.guilds.map(initServer)).catch(e => console.error(e.stack));
 	});
 };

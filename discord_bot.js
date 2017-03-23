@@ -39,4 +39,4 @@ bot.on("message", function(message) {
 var token = config.get('discord.token');
 if (! token.match(/^Bot /)) token = 'Bot '+token;
 
-bot.loginWithToken(token);
+bot.login(token);

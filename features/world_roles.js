@@ -24,10 +24,12 @@ module.exports = function(bot) {
 					var role = (serverHasRole) ? server.roles.get('name', world.name) : null;
 					var userHasRole = (serverHasRole) ? user.hasRole(role) : false;
 					if (world.id === account.world) {
-						if (! serverHasRole)
+						if (! serverHasRole) {
 							promises.push(() => server.createRoleAsync({ name: world.name, hoist: false, mentionable: true }));
-						if (! userHasRole)
+						}
+						if (! userHasRole) {
 							promises.push(() => user.addToAsync(server.roles.get('name', world.name)));
+						}
 					} else {
 						if (userHasRole)
 							promises.push(() => user.removeFromAsync(role));
