@@ -24,7 +24,7 @@ app.get('*', (req, res) => {
 });
 
 http.listen(http_port, function() {
-	console.log('http listenting on port '+http_port+'!');
+	console.log('http listening on port '+http_port+'!');
 });
 
 module.exports = function(bot) {

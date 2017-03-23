@@ -85,19 +85,25 @@ function updateServerChannels(server, user) {
 }
 
 function getCommonServers(userid) {
-	return discord.servers
-		.filter(s => s.members.find(m => m.id === userid))
+	var servers = discord.guilds
+		.filter(s => s.members.has(userid))
 		.map(s => ({ id: s.id, name: s.name, icon: s.iconURL }))
 	;
+	return servers;
 }
 
 function getCommonChannels(userid) {
-	return discord.channels
-		.filter(c => c.type === 'text') // only interested in text channels
-		.filter(c => c.server.members.find(m => m.id === userid)) // user is member of server
-		.filter(c => c.permissionsOf(userid).hasPermission("sendMessages")) // must be able to send to channel
-		.map(c => ({ id: c.id, server: c.server.id, name: c.name, position: c.position }))
-	;
+	var channels = [];
+	discord.guilds.forEach(guild => {
+		var user = guild.members.get(userid);
+		channels = channels.concat(guild.channels
+			.filter(c => c.type === 'text') // only interested in text channels
+			.filter(c => c.members.has(userid)) // user is member of server
+			.filter(c => c.permissionsFor(user).hasPermission("SEND_MESSAGES")) // must be able to send to channel
+			.map(c => ({ id: c.id, server: guild.id, name: c.name, position: c.position }))
+		);
+	});
+	return channels;
 }
 
 function verifyJwt(data, socket) {
@@ -221,7 +227,7 @@ function newConnection(socket) {
 			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getBuildString(character, data.data.type))
 			.then(string => {
-				var channel = discord.channels.get("id", data.data.channel);
+				var channel = discord.channels.get(data.data.channel);
 				if (! channel) throw new Error("no such channel");
 				channel.sendMessage(string);
 			})
@@ -244,7 +250,7 @@ function newConnection(socket) {
 			.then(key => gw2.request('/v2/characters/'+encodeURIComponent(data.data.name), key))
 			.then(character => require('../../builds').getEquipString(character, data.data.type))
 			.then(string => {
-				var channel = discord.channels.get("id", data.data.channel);
+				var channel = discord.channels.get(data.data.channel);
 				if (! channel) throw new Error("no such channel");
 				channel.sendMessage(string);
 			})
@@ -281,15 +287,15 @@ module.exports = function(http, bot) {
 	var io = require('socket.io')(http);
 	io.on('connection', newConnection);
 
-	bot.on("serverCreated", updateServers);
-	bot.on("serverUpdated", updateServers);
-	bot.on("serverDeleted", updateServers);
+	bot.on("guildCreate", updateServers);
+	bot.on("guildUpdate", updateServers);
+	bot.on("guildDelete", updateServers);
 
-	bot.on("channelCreated", updateChannels);
-	bot.on("channelUpdated", updateChannels);
-	bot.on("channelDeleted", updateChannels);
+	bot.on("channelCreate", updateChannels);
+	bot.on("channelUpdate", updateChannels);
+	bot.on("channelDelete", updateChannels);
 
-	bot.on("serverNewMember", updateServerChannels);
-	bot.on("serverMemberRemoved", updateServerChannels);
-	bot.on("serverMemberUpdated", updateServerChannels);
+	bot.on("guildMemberAdd", updateServerChannels);
+	bot.on("guildMemberRemove", updateServerChannels);
+	bot.on("guildMemberUpdate", updateServerChannels);
 }
