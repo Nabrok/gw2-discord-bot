@@ -174,7 +174,7 @@ gw2.on('/v2/account', (account, key, from_cache) => {
 module.exports = function(bot) {
 	bot.on("message", messageReceived);
 	bot.on("presenceUpdate", presenceChanged);
-	bot.on("serverCreated", initServer);
+	bot.on("guildCreate", initServer);
 
 	bot.on("ready", function() {
 		Promise.all(bot.guilds.map(initServer)).catch(e => console.error(e.stack));
