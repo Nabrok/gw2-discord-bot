@@ -113,8 +113,8 @@ function stopPlaying(user) {
 
 function checkUsers(users) {
 	users.forEach(user => {
-		if (! user.game) return;
-		if (user.game.name !== "Guild Wars 2") return;
+		if (! user.presence.game) return;
+		if (user.presence.game.name !== "Guild Wars 2") return;
 		startPlaying(user);
 	});
 }
@@ -287,8 +287,8 @@ function coinsToGold(coins) {
 }
 
 function presenceChanged(oldState, newState) {
-	var isPlaying  = (newState.game && newState.game.name === "Guild Wars 2");
-	var wasPlaying = (oldState.game && oldState.game.name === "Guild Wars 2");
+	var isPlaying  = (newState.presence.game && newState.presence.game.name === "Guild Wars 2");
+	var wasPlaying = (oldState.presence.game && oldState.presence.game.name === "Guild Wars 2");
 	if (isPlaying && ! wasPlaying) {
 		// User started playing
 		startPlaying(newState);
@@ -313,23 +313,21 @@ function presenceChanged(oldState, newState) {
 function messageReceived(message) {
 	var cmd = new RegExp('^!'+phrases.get("SESSION_SHOWLAST")+'$', 'i');
 	if (! message.content.match(cmd)) return;
-	var messageAsync = Promise.promisifyAll(message);
-	var channelAsync = Promise.promisifyAll(message.channel);
-	channelAsync.startTyping()
-	.then(() => parseSession(message.author))
+	message.channel.startTyping();
+	parseSession(message.author)
 	.catch(err => {
 		if (err.message === "no session") return phrases.get("SESSION_NO_SESSION");
 		console.error(err.stack);
 		return phrases.get("CORE_ERROR");
 	})
-	.then(response => messageAsync.reply(response))
-	.then(() => channelAsync.stopTyping());
+	.then(response => message.reply(response))
+	.then(() => message.channel.stopTyping());
 }
 
 module.exports = function(bot) {
 	bot.on("ready", () => {
 		checkUsers(bot.users);
 	});
-	bot.on("presence", presenceChanged);
+	bot.on("presenceUpdate", presenceChanged);
 	bot.on("message", messageReceived);
 }
