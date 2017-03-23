@@ -16,23 +16,25 @@ module.exports = function(bot) {
 			db.getUserByAccountAsync(account.name)
 		]).then(results => {
 			var worlds = results[0];
-			var user = Promise.promisifyAll(bot.users.get('id', results[1]));
+			var user_id = results[1];
 			var promises = [];
-			bot.servers.forEach(server => {
+			bot.guilds.forEach(server => {
+				var user = server.members.get(user_id);
 				worlds.forEach(world => {
-					var serverHasRole = server.roles.has('name', world.name);
-					var role = (serverHasRole) ? server.roles.get('name', world.name) : null;
-					var userHasRole = (serverHasRole) ? user.hasRole(role) : false;
+					var serverHasRole = server.roles.exists('name', world.name);
+					var role = (serverHasRole) ? server.roles.find('name', world.name) : null;
+					var userHasRole = (serverHasRole) ? user.roles.has(role.id) : false;
 					if (world.id === account.world) {
 						if (! serverHasRole) {
-							promises.push(() => server.createRoleAsync({ name: world.name, hoist: false, mentionable: true }));
+							promises.push(() => server.createRole({ name: world.name, hoist: false, mentionable: true }));
 						}
 						if (! userHasRole) {
-							promises.push(() => user.addToAsync(server.roles.get('name', world.name)));
+							promises.push(() => user.addRole(server.roles.find('name', world.name)));
 						}
 					} else {
-						if (userHasRole)
-							promises.push(() => user.removeFromAsync(role));
+						if (userHasRole) {
+							promises.push(() => user.removeRole(role));
+						}
 					}
 				});
 			});
