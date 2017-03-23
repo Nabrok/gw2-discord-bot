@@ -2,7 +2,7 @@ var
 	Promise = require('bluebird'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	phrases = require('../lib/phrases'),
-	gw2 = Promise.promisifyAll(require('../lib/gw2'))
+	gw2 = require('../lib/gw2')
 ;
 
 function startTyping(channel) {
@@ -22,17 +22,17 @@ function getBuildString(character, type) {
 	var trait_ids = specs.reduce((all_traits, s) => all_traits.concat(s.traits.filter(t => !!t)), []);
 	var skill_promise;
 	if (skills.legends) {
-		skill_promise = gw2.getLegendsAsync(skills.legends)
-			.then(legends => gw2.getSkillsAsync(Object.keys(legends).map(l => legends[l].swap)))
+		skill_promise = gw2.getLegends(skills.legends)
+			.then(legends => gw2.getSkills(Object.keys(legends).map(l => legends[l].swap)))
 		;
 	} else {
 		var skill_ids = [ skills.heal, skills.elite ].concat(skills.utilities).filter(s => !!s);
-		skill_promise = gw2.getSkillsAsync(skill_ids);
+		skill_promise = gw2.getSkills(skill_ids);
 	}
 	return Promise.all([
 		skill_promise,
-		gw2.getSpecializationsAsync(spec_ids),
-		gw2.getTraitsAsync(trait_ids)
+		gw2.getSpecializations(spec_ids),
+		gw2.getTraits(trait_ids)
 	]).then(details => {
 		var skill_detail = details[0], spec_detail = details[1], trait_detail = details[2];
 		// Form the output string
@@ -61,11 +61,11 @@ function getBuildString(character, type) {
 function getEquipString(character) {
 	var gear_ids = character.equipment.map(e => e.id);
 	var upgrade_ids = character.equipment.filter(e => e.upgrades).reduce((t, u) => t.concat(u.upgrades), []);
-	return gw2.getItemsAsync(gear_ids.concat(upgrade_ids))
+	return gw2.getItems(gear_ids.concat(upgrade_ids))
 		.then(items => {
 			var infix_ids = Object.keys(items).filter(i => (items[i].details && items[i].details.infix_upgrade)).map(i => items[i].details.infix_upgrade.id);
 			infix_ids = infix_ids.concat(character.equipment.filter(e => e.stats).map(e => e.stats.id));
-			return gw2.getItemStatsAsync(infix_ids)
+			return gw2.getItemStats(infix_ids)
 				.then(itemstats => {
 					var gear_hash = character.equipment.reduce((t, e) => {
 						t[e.slot] = e;
@@ -105,55 +105,49 @@ function messageReceived(message) {
 	var character = matches[2].replace(/<@\d+>/, "").trim();
 	if (cmd === phrases.get("BUILDS_PRIVACY")) {
 		var privacy = matches[3].toLowerCase();
-		startTyping(message.channel)
-			.then(() => Promise.all([
-				db.getUserKeyAsync(message.author.id)
-					.then(key => gw2.requestAsync('/v2/characters', key))
-					.then(characters => {
-						var name = characters.find(c => c.toLowerCase() === character.toLowerCase());
-						if (! name) throw new Error("no such character");
-						return name;
-					}),
-				db.getObjectAsync('privacy:'+message.author.id)
-			]))
-			.then(r => {
-				var name = r[0], p = r[1];
-				if (! p) p = {};
-				if (privacy === "private") p[name] = 1;
-				if (privacy === "guild")   p[name] = 2;
-				if (privacy === "public")  p[name] = 4;
-				return db.setObjectAsync('privacy:'+message.author.id, p);
-			})
-			.then(() => message.reply(phrases.get("BUILDS_PRIVACY_SET")))
-			.catch(err => {
-				if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
-				else {
-					message.reply(phrases.get("CORE_ERROR"));
-					console.error(err.stack);
-				}
-			})
-			.then(() => message.channel.stopTyping())
-		;
+		message.channel.startTyping();
+		Promise.all([
+			db.getUserKeyAsync(message.author.id)
+				.then(key => gw2.request('/v2/characters', key))
+				.then(characters => {
+					var name = characters.find(c => c.toLowerCase() === character.toLowerCase());
+					if (! name) throw new Error("no such character");
+					return name;
+				}),
+			db.getObjectAsync('privacy:'+message.author.id)
+		]).then(r => {
+			var name = r[0], p = r[1];
+			if (! p) p = {};
+			if (privacy === "private") p[name] = 1;
+			if (privacy === "guild")   p[name] = 2;
+			if (privacy === "public")  p[name] = 4;
+			return db.setObjectAsync('privacy:'+message.author.id, p);
+		}).then(() => message.reply(phrases.get("BUILDS_PRIVACY_SET")))
+		.catch(err => {
+			if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
+			else {
+				message.reply(phrases.get("CORE_ERROR"));
+				console.error(err.stack);
+			}
+		})
+		.then(() => message.channel.stopTyping());
 		return;
 	}
 	var discord_id = message.author.id;
-	if (message.mentions && message.mentions.length === 1) discord_id = message.mentions[0].id;
+	if (message.mentions && message.mentions.users.length === 1) discord_id = message.mentions.users[0].id;
 	var type = matches[3] || "pve"; // Default to PvE
 	type = type.toLowerCase();
 	var permissions_needed = ['characters'];
 	if (cmd === phrases.get("BUILDS_BUILD")) permissions_needed.push("builds");
 	if (cmd === phrases.get("BUILDS_EQUIP")) permissions_needed.push("inventories");
-	var preamble = startTyping(message.channel)
-		.then(() => {
-			if (message.mentions && message.mentions.length > 1) throw new Error("more than one mention");
-		})
-		.then(() => db.getUserKeyAsync(discord_id))
+	message.channel.startTyping();
+	var preamble = db.getUserKeyAsync(discord_id)
 		.then(key => {
 			if (! key) throw new Error("endpoint requires authentication");
 			return db.checkKeyPermissionAsync(discord_id, permissions_needed)
 				.then(hasPerm => {
 					if (! hasPerm) throw new Error("requires scope "+permissions_needed.join(" and "));
-					return gw2.requestAsync('/v2/characters', key);
+					return gw2.request('/v2/characters', key);
 				})
 				.then(characters => {
 					// We want it to be case insensitive, so find the correct case for the name given
@@ -170,8 +164,8 @@ function messageReceived(message) {
 							// Guild members only
 							return db.getUserKeyAsync(message.author.id)
 								.then(author_key => Promise.all([
-									gw2.requestAsync('/v2/account', key),
-									gw2.requestAsync('/v2/account', author_key)
+									gw2.request('/v2/account', key),
+									gw2.request('/v2/account', author_key)
 								]))
 								.then(accounts => {
 									var match = accounts[0].guilds.some(g => accounts[1].guilds.indexOf(g) > -1);
@@ -184,7 +178,7 @@ function messageReceived(message) {
 				})
 			;
 		})
-		.then(d => gw2.requestAsync('/v2/characters/'+encodeURIComponent(d.name), d.key))
+		.then(d => gw2.request('/v2/characters/'+encodeURIComponent(d.name), d.key))
 	;
 	var makeString;
 	if (cmd === phrases.get("BUILDS_BUILD")) makeString = preamble.then(character => getBuildString(character, type));
