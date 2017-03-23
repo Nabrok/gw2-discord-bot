@@ -16,7 +16,7 @@ function getRaids(user) {
       var permissions = token.permissions || [];
 			if (permissions.indexOf('progression') === -1) throw new Error('progression permission required');
       return Promise.all([
-        gw2.requestAsync('/v2/raids', key)
+        gw2.request('/v2/raids', key)
           .then(raids => {
             var queries = [];
             raids.forEach(function(id) {
@@ -25,14 +25,13 @@ function getRaids(user) {
         		return Promise.map(queries, q => q.promise());
           }) ,
 
-        gw2.requestAsync('/v2/account/raids', key)
+        gw2.request('/v2/account/raids', key)
       ])
     })
   // ])
   .then(result => {
     var out=phrases.get("KILLS_REPLY");
     var raids=result[0], kills=result[1];
-    console.log("RAIDS ARE : " + JSON.stringify(result));
     raids.forEach(function(item, index) {
       out += '**__' + item.id + '__**' + "\n";
       item.wings.forEach(function(wing, index) {
@@ -49,18 +48,16 @@ function getRaids(user) {
 function messageReceived(message) {
 	var cmd = new RegExp('^!' + phrases.get('KILLS_KILLS') + '$', 'i');
 	if (! message.content.match(cmd)) return;
-  var messageAsync = Promise.promisifyAll(message);
-	var channelAsync = Promise.promisifyAll(message.channel);
-	channelAsync.startTyping()
-	.then(() => getRaids(message.author))
-  .then(res => messageAsync.reply(res))
+	message.channel.startTyping();
+	getRaids(message.author)
+  .then(res => message.reply(res))
 	 .catch((err) => {
-	 		if (err.message === "endpoint requires authentication") return messageAsync.reply(phrases.get("CORE_NO_KEY"));
- 			if (err.message === "progression permission required") return messageAsync.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'progression' }));
+	 		if (err.message === "endpoint requires authentication") return message.reply(phrases.get("CORE_NO_KEY"));
+ 			if (err.message === "progression permission required") return message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'progression' }));
     console.error(err.stack);
-    return messageAsync.reply(phrases.get("CORE_ERROR"));
+    return message.reply(phrases.get("CORE_ERROR"));
   })
-  .then(() => channelAsync.stopTyping());
+  .then(() => message.channel.stopTyping());
 
 }
 
