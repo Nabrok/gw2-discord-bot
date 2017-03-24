@@ -87,7 +87,14 @@ function checkUserAccount(user) {
 		})
 		.then(() => {
 			if (guild_key && guild_id)
-				return gw2.request('/v2/guild/'+guild_id+'/members', guild_key);
+				return gw2.request('/v2/guild/'+guild_id+'/members', guild_key)
+				.catch(e => {
+					if (e.message === 'access restricted to guild leaders') {
+						guild_key = null;
+						return;
+					}
+					throw e;
+				});
 		})
 		.catch(err => {
 			if (err.message === 'no key') return;

@@ -109,12 +109,18 @@ function botReady(bot) {
 		.then(ranks => Promise.all(
 			bot.guilds.map(server => initServer(server, ranks))
 		))
+		.catch(e => {
+			console.error(`Error retrieving /v2/guild/${guild_id}/ranks: ${e.message}`);
+		})
 	;
 }
 
 function joinedServer(server) {
 	gw2.request('/v2/guild/'+guild_id+'/ranks', guild_key)
 		.then(ranks => initServer(server, ranks))
+		.catch(e => {
+			console.error(`Error retrieving /v2/guild/${guild_id}/ranks: ${e.message}`);
+		})
 	;
 }
 
