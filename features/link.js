@@ -81,7 +81,7 @@ function checkUserAccount(user) {
 				});
 				var promises = [ db.removeUserAsync(user.id) ];
 				if (removeRoles.length > 0) promises.push(user.removeRoles(removeRoles));
-				return Promises.all(promises);
+				return Promise.all(promises);
 			}
 			throw err;
 		})
