@@ -10,16 +10,21 @@ function delay(ms) {
 
 module.exports = function(bot) {
 	gw2.on('/v2/account', (account, key, from_cache) => {
-		if (from_cache) return;
+		//if (from_cache) return;
 		Promise.all([
 			gw2.getAllWorlds(),
 			db.getUserByAccountAsync(account.name)
 		]).then(results => {
 			var worlds = results[0];
 			var user_id = results[1];
+			if (! user_id) return;
 			var promises = [];
 			bot.guilds.forEach(server => {
 				var user = server.members.get(user_id);
+				if (! user) {
+					console.error(`World Roles: User ${user_id} is not on server %{server.name}`);
+					return;
+				}
 				worlds.forEach(world => {
 					var serverHasRole = server.roles.exists('name', world.name);
 					var role = (serverHasRole) ? server.roles.find('name', world.name) : null;
