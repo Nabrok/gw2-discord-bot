@@ -37,9 +37,10 @@ function checkUserAccount(user) {
 		.then(account => {
 			var in_guild = (account.guilds.indexOf(guild_id) > -1);
 			return db.setUserAccountAsync(user.id, account).then(() => {
-				var add_roles = [];
-				var del_roles = [];
+				var promises = [];
 				bot.guilds.forEach(server => {
+					var add_roles = [];
+					var del_roles = [];
 					var guser = server.members.get(user.id);
 					if (! guser) return;
 					if (world_role_name) {
@@ -56,10 +57,9 @@ function checkUserAccount(user) {
 						else if (guser.roles.has(guild_role.id) && ! in_guild)
 							del_roles.push(guild_role);
 					}
+					if (add_roles.length > 0) promises.push(guser.addRoles(add_roles));
+					if (del_roles.length > 0) promises.push(guser.removeRoles(del_roles));
 				});
-				var promises = [];
-				if (add_roles.length > 0) promises.push(user.addRoles(add_roles));
-				if (del_roles.length > 0) promises.push(user.removeRoles(del_roles));
 				return Promise.all(promises);
 			});
 		})
