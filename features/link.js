@@ -99,7 +99,7 @@ function checkUserAccount(user) {
 		.catch(err => {
 			if (err.message === 'no key') return;
 			if (err.message === 'invalid key') return;
-			console.error('Error checking account: '+e.message);
+			console.error('Error checking account: '+err.message);
 		});
 	;
 }
