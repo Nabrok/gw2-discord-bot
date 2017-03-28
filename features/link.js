@@ -66,9 +66,10 @@ function checkUserAccount(user) {
 		.catch(err => {
 			if (err.message === 'endpoint requires authentication' || err.message === 'invalid key') {
 				console.log('removing user '+user.id);
-				var removeRoles = [];
+				var promises = [ db.removeUserAsync(user.id) ];
 				bot.guilds.forEach(server => {
 					var guser = server.members.get(user.id);
+					var removeRoles = [];
 					if (! guser) return;
 					if (world_role_name) {
 						var world_role = server.roles.find('name', world_role_name);
@@ -78,9 +79,8 @@ function checkUserAccount(user) {
 						var guild_role = server.roles.find('name', guild_role_name);
 						removeRoles.push(guild_role);
 					}
+					if (removeRoles.length > 0) promises.push(guser.removeRoles(removeRoles));
 				});
-				var promises = [ db.removeUserAsync(user.id) ];
-				if (removeRoles.length > 0) promises.push(user.removeRoles(removeRoles));
 				return Promise.all(promises);
 			}
 			throw err;
@@ -98,7 +98,8 @@ function checkUserAccount(user) {
 		})
 		.catch(err => {
 			if (err.message === 'no key') return;
-			console.error(err.stack);
+			if (err.message === 'invalid key') return;
+			console.error('Error checking account: '+e.message);
 		});
 	;
 }
@@ -126,7 +127,8 @@ function messageReceived(message) {
 						.then(() => message.reply(phrases.get("LINK_KEY_DETAILS", { name: token.name, permissions: permissions })))
 						.then(() => {
 							delete open_codes[message.author.id];
-							return checkUserAccount(message.author);
+							return checkUserAccount(message.author)
+							.then(() => gw2.request('/v2/account', key));
 						})
 					;
 				}).catch(err => {

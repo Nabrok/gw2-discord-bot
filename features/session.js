@@ -76,7 +76,7 @@ function startPlaying(user) {
 		})
 		.catch(err => {
 			if (err.message === "endpoint requires authentication") return;
-			console.error(err.stack);
+			console.error("Error starting session: "+err.message);
 		});
 	});
 }
@@ -105,8 +105,9 @@ function stopPlaying(user) {
 		})
 		.catch(err => {
 			if (err.message === "endpoint requires authentication") return;
+			if (err.message === "invalid key") return;
 			if (err.message === "no session") throw err; // rethrow
-			console.error(err.stack);
+			console.error("Error stopping session: " + err.message);
 		});
 	});
 }
@@ -270,8 +271,9 @@ function parseSession(user) {
 	})
 	.catch(err => {
 		if (err.message === "endpoint requires authentication") return;
+		if (err.message === "invalid key") return;
 		if (err.message === "no session") throw err;
-		console.error(err.stack);
+		console.error("Error gathering session data: "+e.message);
 	});
 }
 
@@ -300,12 +302,14 @@ function presenceChanged(oldState, newState) {
 			setTimeout(function() {
 				stopPlaying(newState).catch(err => {
 					if (err.message === "no session") return;
-					console.error(err.stack);
+					if (err.message === "invalid key") return;
+					console.error("Error stopping session: " + err.message);
 				});
 			}, 305000);
 		}).catch(err => {
 			if (err.message === "no session") return;
-			console.error(err.stack);
+			if (err.message === "invalid key") return;
+			console.error("Error stopping session: " + err.message);
 		});
 	}
 }
