@@ -28,10 +28,10 @@ function messageReceived(message) {
 		})
 		.catch(err => {
 			if (err.message === "endpoint requires authentication") return message.reply(phrases.get("CORE_NO_KEY"));
-			if (err.message === "requires scope progression") return message.reply(phrases.get("CORE_MISSING_SCORE", { scope: 'progression' }));
+			if (err.message === "requires scope progression") return message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'progression' }));
 			console.error('Error reading account progression: '+ err.message)
 		})
-		.then(() => message.channel.stopTyping())
+		.finally(() => message.channel.stopTyping())
 	;
 }
 
