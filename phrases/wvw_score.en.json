@@ -17,6 +17,7 @@
 	"WVWSCORE_EMBED_TITLE": "WvW Score",
 	"WVWSCORE_EMBED_DESCRIPTION": "%{region} Tier %{tier}",
 	"WVWSCORE_EMBED_VP": "Victory Points: %{points}",
+	"WVWSCORE_EMBED_SKIRMISH": "Skirmish: %{points}",
 	"WVWSCORE_EMBED_TOTAL": "Score: %{points}",
 	"WVWSCORE_EMBED_PPT": "PPT: +%{ppt}",
 	"WVWSCORE_EMBED_KD": "K/D: %{kd}",

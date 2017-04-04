@@ -59,6 +59,8 @@ function formatWorldNames(worlds, color) {
 function getScores(match, map) {
 	var world_ids = [].concat.apply([], Object.keys(match.all_worlds).map(c => match.all_worlds[c]));
 	var score_obj = (map === 'all') ? match : match.maps.find(m => m.type === map);
+	var skirmish = match.skirmishes[match.skirmishes.length - 1];
+	var skirmish_scores = (map === 'all') ? skirmish.scores : skirmish.map_scores.find(m => m.type === map).scores;
 	return gw2.getWorlds(world_ids).then(worlds => {
 		var names = {};
 		var colors = Object.keys(match.all_worlds);
@@ -69,6 +71,7 @@ function getScores(match, map) {
 		var scores = Object.keys(match.worlds).map(color => ({
 			color: color,
 			names: names[color],
+			skirmish: skirmish_scores[color],
 			score: score_obj.scores[color],
 			victory_points: match.victory_points[color],
 			ppt: (map === 'all') ? countPPT(match, color) : countMapPPT(score_obj, color),
@@ -85,7 +88,7 @@ function formatEmbed(match, scores, map) {
 	var most_worlds = scores.reduce((max, w) => (w.names.length > max) ? w.names.length : max, 0);
 	var sorted = scores.sort((a,b) => {
 		var vp_diff = (map === 'all') ? b.victory_points - a.victory_points : 0;
-		return (vp_diff || b.score - a.score);
+		return (vp_diff || b.skirmish - a.skirmish || b.score - a.score);
 	});
 	var map_name = phrases.get("WVWSCORE_OVERALL");
 	if (map === 'Center') map_name = phrases.get("WVWSCORE_MAP_CENTER");
@@ -99,6 +102,7 @@ function formatEmbed(match, scores, map) {
 		}
 		var stats = [];
 		stats.push(phrases.get("WVWSCORE_EMBED_VP", { points: world.victory_points.toLocaleString() }));
+		stats.push(phrases.get("WVWSCORE_EMBED_SKIRMISH", { points: world.skirmish.toLocaleString() }));
 		stats.push(phrases.get("WVWSCORE_EMBED_TOTAL", { points: world.score.toLocaleString() }));
 		stats.push(phrases.get("WVWSCORE_EMBED_PPT", { ppt: world.ppt.toLocaleString() }));
 		stats.push(phrases.get("WVWSCORE_EMBED_KD", { kd: (world.kills / world.deaths).toLocaleString()}));
@@ -142,7 +146,7 @@ function messageReceived(message) {
 					});
 				}
 				if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
-					result = scores.sort((a, b) => (b.victory_points - a.victory_points)).map(world => (formatWorldNames(world.names, world.color)+': '+world.victory_points.toLocaleString()+' (+'+world.ppt+')')).join("\n");
+					result = scores.sort((a, b) => (b.victory_points - a.victory_points || b.skirmish - a.skirmish)).map(world => (formatWorldNames(world.names, world.color)+': '+world.victory_points.toLocaleString()+' | '+world.skirmish.toLocaleString() + ' | +'+world.ppt)).join("\n");
 				else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
 					result = scores.sort((a, b) => ((b.kills / b.deaths) - (a.kills / a.deaths))).map(world => (formatWorldNames(world.names, world.color)+': '+world.kills.toLocaleString()+'/'+world.deaths.toLocaleString()+' = '+(world.kills / world.deaths).toLocaleString())).join("\n");
 				else if (message.content.match(new RegExp('^!'+relscore_cmd+'$', 'i'))) {
@@ -156,7 +160,7 @@ function messageReceived(message) {
 			console.error('Error retrieving wvw score: '+e.message);
 			return message.reply(phrases.get("WVWSCORE_ERROR"));
 		})
-		.then(() => message.channel.stopTyping())
+		.finally(() => message.channel.stopTyping())
 	;
 }
 
