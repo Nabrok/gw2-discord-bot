@@ -12,6 +12,7 @@ function messageReceived(message) {
 	if (message.content.match(new RegExp(`^!${phrases.get("WHOIS_WHOIS")} (.*)?$`, "i"))) {
 		if (message.mentions.users.length === 0) return; // No mentions? No answer
 		const user = message.mentions.users.first();
+		if (! user) return;
 		channel.startTyping();
 		var p;
 		if (user.id === bot_user.id) p = message.reply(phrases.get("WHOIS_BOT", { user: bot_user }));
