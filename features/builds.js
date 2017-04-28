@@ -179,11 +179,10 @@ function messageReceived(message) {
 			;
 		})
 		.then(d => gw2.request('/v2/characters/'+encodeURIComponent(d.name), d.key))
-	;
-	var makeString;
-	if (cmd === phrases.get("BUILDS_BUILD")) makeString = preamble.then(character => getBuildString(character, type));
-	else if (cmd === phrases.get("BUILDS_EQUIP")) makeString = preamble.then(character => getEquipString(character));
-	makeString
+		.then(character => {
+			if (cmd === phrases.get("BUILDS_BUILD")) return getBuildString(character, type);
+			else if (cmd === phrases.get("BUILDS_EQUIP")) return getEquipString(character);
+		})
 		.then(string => message.reply(string))
 		.catch(err => {
 			var scope = err.message.match(/^requires scope (.+)?/);
@@ -198,7 +197,7 @@ function messageReceived(message) {
 			}
 			return;
 		})
-		.then(() => message.channel.stopTyping())
+		.finally(() => message.channel.stopTyping())
 	;
 }
 
