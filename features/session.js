@@ -3,7 +3,8 @@ var
 	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
 	diff = require('deep-diff').diff,
-	phrases = require('../lib/phrases')
+	phrases = require('../lib/phrases'),
+	filter = require('../lib/filter')
 ;
 
 const session_prefix = 'session';
@@ -317,6 +318,7 @@ function presenceChanged(oldState, newState) {
 function messageReceived(message) {
 	var cmd = new RegExp('^!'+phrases.get("SESSION_SHOWLAST")+'$', 'i');
 	if (! message.content.match(cmd)) return;
+	if (filter.filterChannel(message)) return;
 	message.channel.startTyping();
 	parseSession(message.author)
 	.catch(err => {

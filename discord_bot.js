@@ -3,7 +3,8 @@ var
 	config = require('config'),
 	Discord = require('discord.js'),
 	gw2 = require('./lib/gw2'),
-	phrases = require('./lib/phrases')
+	phrases = require('./lib/phrases'),
+	filter = require('./lib/filter')
 ;
 
 var language = config.has('features.language') ? config.get('features.language') : "en";
@@ -30,6 +31,7 @@ bot.on("disconnected", function() {
 
 bot.on("message", function(message) {
 	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
+		if (filter.filterChannel(message)) return;
 		var help = features.map(f => phrases.get(f.toUpperCase()+"_HELP")).filter(f => !!f).join("\n\n").trim();
 		message.author.sendMessage("```Commands```\n"+help);
 		return;

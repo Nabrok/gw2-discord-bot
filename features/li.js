@@ -2,7 +2,8 @@ var
 	Promise = require('bluebird'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
-	phrases = require('../lib/phrases')
+	phrases = require('../lib/phrases'),
+	filter = require('../lib/filter')
 ;
 
 const li_id = 77302; // ID number for Legendary Insights
@@ -45,6 +46,7 @@ function countLI(user) {
 function messageReceived(message) {
 	var cmd = new RegExp('^!'+phrases.get("LI_CMD")+'$', 'i');
 	if (! message.content.match(cmd)) return;
+	if (filter.filterChannel(message)) return;
 	message.channel.startTyping();
 	countLI(message.author)
 	.then(count => message.reply(phrases.get("LI_SHOW", { count })))

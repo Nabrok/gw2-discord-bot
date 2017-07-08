@@ -5,7 +5,8 @@ const
 	config = require("config"),
 	toMarkdown = require("to-markdown"),
 	db = Promise.promisifyAll(require("../lib/db")),
-	phrases = require("../lib/phrases");
+	phrases = require("../lib/phrases"),
+	filter = require('../lib/filter');
 
 const ttl = 1000 * 60 * 60; // Cache wiki responses for an hour to prevent flooding the wiki with requests with the same search terms
 
@@ -57,6 +58,7 @@ function getWikiLang(lang) {
 function messageReceived(message) {
 	let match;
 	if (match = message.content.match(new RegExp(`^!${phrases.get("WIKI_WIKI")}-?([a-zA-Z]*) ?(.*)?$`, "i"))) {
+		if (filter.filterChannel(message)) return;
 		const lang = match[1];
 		const terms = match[2];
 		if (! terms) return;
