@@ -25,10 +25,11 @@ function countLI(user) {
 			}));
 			return Promise.map(char_queries, c => c.promise(), { concurrency: 3 });
 		})});
+		queries.push({ name: 'materials', promise: () => gw2.request('/v2/account/materials', key) });
 		return Promise.map(queries, q => q.promise());
 	})
 	.then(result => {
-		var bank = result[0], shared = result[1], characters = result[2];
+		var bank = result[0], shared = result[1], characters = result[2], mats = result[3];
 		var bank_insights = bank.filter(item => !!item && item.id === li_id).reduce((total, item) => { total += item.count; return total; }, 0);
 		var shared_insights = shared.filter(item => !!item && item.id === li_id).reduce((total, item) => { total += item.count; return total; }, 0);
 		var char_insights = characters.reduce((total, character) =>
@@ -38,7 +39,8 @@ function countLI(user) {
 				, char_total)
 			, total)
 		, 0);
-		return bank_insights + shared_insights + char_insights;
+		var mats_insight = mats.filter(item => !!item && item.id === li_id).reduce((total, item) => { total += item.count; return total; }, 0);
+		return bank_insights + shared_insights + char_insights + mats_insight;
 	});
 }
 
