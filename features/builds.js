@@ -134,7 +134,8 @@ function messageReceived(message) {
 		return;
 	}
 	var discord_id = message.author.id;
-	if (message.mentions && message.mentions.users.length === 1) discord_id = message.mentions.users.first().id;
+	var mentions = message.mentions.users.array();
+	if (mentions.length == 1) discord_id = message.mentions.users.first().id;
 	var type = matches[3] || "pve"; // Default to PvE
 	type = type.toLowerCase();
 	var permissions_needed = ['characters'];
