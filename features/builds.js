@@ -102,7 +102,7 @@ function messageReceived(message) {
 	var matches = message.content.match(traits_cmd) || message.content.match(equip_cmd) || message.content.match(privacy_cmd);
 	if (! matches) return;
 	var cmd = matches[1];
-	var character = matches[2].replace(/<@\d+>/, "").trim();
+	var character = matches[2].replace(/<@.+>/, "").trim();
 	if (cmd === phrases.get("BUILDS_PRIVACY")) {
 		var privacy = matches[3].toLowerCase();
 		message.channel.startTyping();
