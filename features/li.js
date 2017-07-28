@@ -39,8 +39,8 @@ function countLI(user) {
 				, char_total)
 			, total)
 		, 0);
-		var mats_insight = mats.filter(item => !!item && item.id === li_id).reduce((total, item) => { total += item.count; return total; }, 0);
-		return bank_insights + shared_insights + char_insights + mats_insight;
+		var mats_insights = mats.filter(item => !!item && item.id === li_id).reduce((total, item) => { total += item.count; return total; }, 0);
+		return bank_insights + shared_insights + char_insights + mats_insights;
 	});
 }
 
