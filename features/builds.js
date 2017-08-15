@@ -2,7 +2,8 @@ var
 	Promise = require('bluebird'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	phrases = require('../lib/phrases'),
-	gw2 = require('../lib/gw2')
+	gw2 = require('../lib/gw2'),
+	filter = require('../lib/filter')
 ;
 
 function startTyping(channel) {
@@ -101,6 +102,7 @@ function messageReceived(message) {
 	var privacy_cmd = new RegExp('!('+phrases.get("BUILDS_PRIVACY")+') (.+) (private|guild|public)$', 'i');
 	var matches = message.content.match(traits_cmd) || message.content.match(equip_cmd) || message.content.match(privacy_cmd);
 	if (! matches) return;
+	if (filter.filterChannel(message)) return;
 	var cmd = matches[1];
 	var character = matches[2].replace(/<@\d+>/, "").trim();
 	if (cmd === phrases.get("BUILDS_PRIVACY")) {

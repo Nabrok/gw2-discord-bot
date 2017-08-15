@@ -2,7 +2,8 @@
 const
 	Promise = require("bluebird"),
 	db = Promise.promisifyAll(require("../lib/db")),
-	phrases = require("../lib/phrases");
+	phrases = require("../lib/phrases"),
+	filter = require('../lib/filter');
 
 let bot_user;
 
@@ -11,6 +12,7 @@ function messageReceived(message) {
 
 	if (message.content.match(new RegExp(`^!${phrases.get("WHOIS_WHOIS")} (.*)?$`, "i"))) {
 		if (message.mentions.users.length === 0) return; // No mentions? No answer
+		if (filter.filterChannel(message)) return;
 		const user = message.mentions.users.first();
 		if (! user) return;
 		channel.startTyping();

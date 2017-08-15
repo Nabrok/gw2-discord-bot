@@ -3,7 +3,8 @@ var
 	config = require('config'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
-	phrases = require('../lib/phrases')
+	phrases = require('../lib/phrases'),
+	filter = require('../lib/filter')
 ;
 
 var guild_world = config.has('world.id') ? config.get('world.id') : null;
@@ -129,6 +130,7 @@ function messageReceived(message) {
 	var relscore_cmd = phrases.get("WVWSCORE_RELSCORE");
 	var kd_cmd = phrases.get("WVWSCORE_KD");
 	if (! message.content.match(new RegExp('^!('+match_cmd+'|'+score_cmd+'|'+relscore_cmd+'|'+kd_cmd+')$', 'i'))) return;
+	if (filter.filterChannel(message)) return;
 	message.channel.startTyping();
 	db.getAccountByUserAsync(message.author.id)
 		.then(account => (account && account.world) ? account.world : guild_world)

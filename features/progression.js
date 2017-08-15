@@ -2,13 +2,15 @@ var
 	Promise = require('bluebird'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	phrases = require('../lib/phrases'),
-	gw2 = require('../lib/gw2')
+	gw2 = require('../lib/gw2'),
+	filter = require('../lib/filter')
 ;
 
 function messageReceived(message) {
 	var fractal_cmd = phrases.get("PROGRESSION_FRACTAL");
 	var wvw_cmd = phrases.get("PROGRESSION_WVW");
 	if (! message.content.match(new RegExp('^!('+fractal_cmd+'|'+wvw_cmd+')$', 'i'))) return;
+	if (filter.filterChannel(message)) return;
 	message.channel.startTyping();
 	db.checkKeyPermissionAsync(message.author.id, 'progression')
 		.then(hasPerm => {

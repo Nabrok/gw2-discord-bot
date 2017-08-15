@@ -2,7 +2,8 @@ var
 	Promise = require('bluebird'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
-	phrases = require('../lib/phrases')
+	phrases = require('../lib/phrases'),
+	filter = require('../lib/filter')
 ;
 
 function getRaids(user) {
@@ -48,6 +49,7 @@ function getRaids(user) {
 function messageReceived(message) {
 	var cmd = new RegExp('^!' + phrases.get('KILLS_KILLS') + '$', 'i');
 	if (! message.content.match(cmd)) return;
+	if (filter.filterChannel(message)) return;
 	message.channel.startTyping();
 	getRaids(message.author)
   .then(res => message.reply(res))
