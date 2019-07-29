@@ -25,10 +25,10 @@ module.exports = function(bot) {
 				var user = server.members.get(userid);
 				if (! user) return;
 				worlds.forEach(world => {
-					var serverHasRole = server.roles.exists('name', world.name);
+					const serverHasRole = server.roles.some(r => r.name === world.name);
 					if (! serverHasRole) return;
-					var role = (serverHasRole) ? server.roles.find('name', world.name) : null;
-					var userHasRole = (serverHasRole) ? user.roles.has(role.id) : false;
+					const role = server.roles.find(r => r.name === world.name);
+					const userHasRole = user.roles.has(role.id);
 					if (! userHasRole) return;
 					promises.push(() => user.removeRole(role));
 				});
@@ -57,15 +57,14 @@ module.exports = function(bot) {
 					return;
 				}
 				worlds.forEach(world => {
-					var serverHasRole = server.roles.exists('name', world.name);
-					var role = (serverHasRole) ? server.roles.find('name', world.name) : null;
-					var userHasRole = (serverHasRole) ? user.roles.has(role.id) : false;
+					const role = server.roles.find(r => r.name === world.name);
+					const userHasRole = role ? user.roles.has(role.id) : false;
 					if (world.id === account.world) {
-						if (! serverHasRole) {
+						if (! role) {
 							promises.push(() => server.createRole({ name: world.name, hoist: false, mentionable: true }));
 						}
 						if (! userHasRole) {
-							promises.push(() => user.addRole(server.roles.find('name', world.name)));
+							promises.push(() => user.addRole(server.roles.find(r => r.name === world.name)));
 						}
 					} else {
 						if (userHasRole) {
