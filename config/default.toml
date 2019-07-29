@@ -1,4 +1,7 @@
 # Copy this file to local.toml to make changes for a version that git will ignore.
+
+refresh_member_interval = 86400 # Number of seconds between automatic account data refresh of each member
+
 [redis]
 host = "127.0.0.1"
 port = "6379"

@@ -14,6 +14,9 @@ var world_id = config.has('world.id') ? config.get('world.id') : null;
 var world_role_name = config.has('world.role') ? config.get('world.role') : null;
 var guild_role_name = config.has('guild.member_role') ? config.get('guild.member_role') : null;
 
+const refresh_member_interval = config.has('refresh_member_interval') ? config.get('refresh_member_interval') * 1000 : null;
+console.log('refresh_member_interval', refresh_member_interval);
+
 var open_codes = {}; // Codes we're currently expecting to see in an API key name
 
 function requestAPIKey(user) {
@@ -156,6 +159,11 @@ function presenceChanged(oldUser, newUser) {
 		checkUserAccount(newUser);
 }
 
+function checkMembers(bot) {
+	const members = bot.guilds.reduce((members, guild) => members.concat(guild.members.array()), []);
+	return Promise.all(members.map(m => checkUserAccount(m)));
+}
+
 function initServer(server) {
 	var promises = [];
 	if (guild_role_name && ! server.roles.exists('name', guild_role_name)) {
@@ -186,6 +194,12 @@ module.exports = function(bot) {
 	bot.on("guildCreate", initServer);
 
 	bot.on("ready", function() {
-		Promise.all(bot.guilds.map(initServer)).catch(e => console.error(e.stack));
+		Promise.all(bot.guilds.map(initServer))
+		.then(() => checkMembers(bot))
+		.catch(e => console.error(e.stack));
 	});
+
+	if (refresh_member_interval) {
+		setInterval(() => checkMembers(bot), refresh_member_interval);
+	}
 };
