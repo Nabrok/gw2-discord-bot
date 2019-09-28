@@ -1,6 +1,5 @@
 var
 	Promise = require('bluebird'),
-	async = require('async'),
 	config = require('config'),
 	db = Promise.promisifyAll(require('../lib/db')),
 	gw2 = require('../lib/gw2'),
@@ -26,7 +25,7 @@ function requestAPIKey(user) {
 		user: user
 	};
 	// Remove code in 5 minutes
-	setTimeout(function() { delete open_codes[user.id]; }, 5 * 60 * 1000);
+	setTimeout(function() { delete open_codes[user.id] }, 5 * 60 * 1000);
 	return user.sendMessage(phrases.get("LINK_REPLY_WITH_KEY", { code: code }));
 }
 
@@ -35,7 +34,7 @@ function checkUserAccount(user) {
 	return db.getUserKeyAsync(user.id)
 		.then(key => {
 			if (! key) throw new Error('no key');
-			return gw2.request('/v2/account', key)
+			return gw2.request('/v2/account', key);
 		})
 		.then(account => {
 			var in_guild = (account.guilds.indexOf(guild_id) > -1);
@@ -91,20 +90,20 @@ function checkUserAccount(user) {
 		.then(() => {
 			if (guild_key && guild_id)
 				return gw2.request('/v2/guild/'+guild_id+'/members', guild_key)
-				.catch(e => {
-					if (e.message === 'access restricted to guild leaders') {
-						guild_key = null;
-						return;
-					}
-					throw e;
-				});
+					.catch(e => {
+						if (e.message === 'access restricted to guild leaders') {
+							guild_key = null;
+							return;
+						}
+						throw e;
+					});
 		})
 		.catch(err => {
 			if (err.message === 'no key') return;
 			if (err.message === 'invalid key') return;
 			console.error('Error checking account: '+err.message);
 		});
-	;
+	
 }
 
 function messageReceived(message) {
@@ -131,7 +130,7 @@ function messageReceived(message) {
 						.then(() => {
 							delete open_codes[message.author.id];
 							return checkUserAccount(message.author)
-							.then(() => gw2.request('/v2/account', key));
+								.then(() => gw2.request('/v2/account', key));
 						})
 					;
 				}).catch(err => {
@@ -195,8 +194,8 @@ module.exports = function(bot) {
 
 	bot.on("ready", function() {
 		Promise.all(bot.guilds.map(initServer))
-		.then(() => checkMembers(bot))
-		.catch(e => console.error(e.stack));
+			.then(() => checkMembers(bot))
+			.catch(e => console.error(e.stack));
 	});
 
 	if (refresh_member_interval) {
