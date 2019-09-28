@@ -1,0 +1,28 @@
+env:
+  node: true
+  es6: true
+parserOptions:
+  ecmaVersion: 2018
+extends:
+  - 'eslint:recommended'
+rules:
+  indent:
+    - error
+    - tab
+    - {
+      SwitchCase: 1
+    }
+  quotes:
+    - off
+    - double
+  semi:
+    - error
+    - always
+    - {
+      omitLastInOneLineBlock: true
+    }
+  getter-return:
+    - error
+    - {
+      allowImplicit: true
+    }
