@@ -2,6 +2,19 @@
 
 This is a bot for Discord that integrates with the Guild Wars 2 API.
 
+Migration from redis
+--------------------
+
+As of version 2 the bot is now using a sqlite database to store information rather than the redis cache.  This should make the bot easier to install and run, especially on windows systems.
+
+To migrate user keys from redis a utility has been provided.
+
+```
+$ sudo npm install -g redis-dump
+$ redis-dump -f "gw2_discord:*" --json > redis_dump.json
+$ node ./import_redis.js redis_dump.json
+```
+
 Setup
 -----
 
