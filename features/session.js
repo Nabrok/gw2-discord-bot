@@ -1,6 +1,6 @@
 var
 	Promise = require('bluebird'),
-	db = Promise.promisifyAll(require('../lib/db')),
+	db = require('../lib/database'),
 	gw2 = require('../lib/gw2'),
 	diff = require('deep-diff').diff,
 	phrases = require('../lib/phrases')
@@ -19,97 +19,97 @@ function resultsToObject(start, key, results) {
 }
 
 function gatherData(user) {
-	return Promise.all([db.getUserKeyAsync(user.id), db.getUserTokenAsync(user.id)])
-	.then(result => {
-		var key = result[0], token = result[1] ? JSON.parse(result[1]) : {};
-		if (! key) throw new Error("endpoint requires authentication");
-		var permissions = token.permissions || [];
-		var queries = [];
-		if (permissions.indexOf('progression') > -1) {
-			queries.push({ name: 'account', promise: () => gw2.request('/v2/account', key) });
-			queries.push({ name: 'achievements', promise: () => gw2.request('/v2/account/achievements', key) });
-		}
-		if (permissions.indexOf('unlocks') > -1) {
-			queries.push({ name: 'skins', promise: () => gw2.request('/v2/account/skins', key) });
-			queries.push({ name: 'titles', promise: () => gw2.request('/v2/account/titles', key) });
-			queries.push({ name: 'minis', promise: () => gw2.request('/v2/account/minis', key) });
-			queries.push({ name: 'outfits', promise: () => gw2.request('/v2/account/outfits', key) });
-			queries.push({ name: 'dyes', promise: () => gw2.request('/v2/account/dyes', key) });
-			queries.push({ name: 'finishers', promise: () => gw2.request('/v2/account/finishers', key) });
-		}
-		if (permissions.indexOf('wallet') > -1) {
-			queries.push({ name: 'wallet', promise: () => gw2.request('/v2/account/wallet', key) });
-		}
-		if (permissions.indexOf('inventories') > -1) {
-			queries.push({ name: 'materials', promise: () => gw2.request('/v2/account/materials', key) });
-			queries.push({ name: 'bank', promise: () => gw2.request('/v2/account/bank', key) });
-			queries.push({ name: 'inventory', promise: () => gw2.request('/v2/account/inventory', key) });
-		}
-		if (permissions.indexOf('pvp') > -1) {
-			queries.push({ name: 'pvp', promise: () => gw2.request('/v2/pvp/stats', key) });
-		}
-		if (permissions.indexOf('characters') > -1) {
-			queries.push({ name: 'characters', promise: () => gw2.request('/v2/characters', key).then(characters => {
-				var char_queries = characters.map(c => ({
-					name: c,
-					promise: () => gw2.request('/v2/characters/'+encodeURIComponent(c), key)
-				}));
-				return Promise.map(char_queries, c => c.promise(), { concurrency: 3 }).then(results => resultsToObject(char_queries, 'name', results));
-			})});
-		}
-		return Promise.map(queries, q => q.promise(), { concurrency: 5 }).then(results => resultsToObject(queries, 'name', results));
-	});
+	return Promise.all([db.getUserKey(user.id), db.getUserToken(user.id)])
+		.then(result => {
+			var key = result[0], token = result[1] ? result[1] : {};
+			if (! key) throw new Error("endpoint requires authentication");
+			var permissions = token.permissions || [];
+			var queries = [];
+			if (permissions.indexOf('progression') > -1) {
+				queries.push({ name: 'account', promise: () => gw2.request('/v2/account', key) });
+				queries.push({ name: 'achievements', promise: () => gw2.request('/v2/account/achievements', key) });
+			}
+			if (permissions.indexOf('unlocks') > -1) {
+				queries.push({ name: 'skins', promise: () => gw2.request('/v2/account/skins', key) });
+				queries.push({ name: 'titles', promise: () => gw2.request('/v2/account/titles', key) });
+				queries.push({ name: 'minis', promise: () => gw2.request('/v2/account/minis', key) });
+				queries.push({ name: 'outfits', promise: () => gw2.request('/v2/account/outfits', key) });
+				queries.push({ name: 'dyes', promise: () => gw2.request('/v2/account/dyes', key) });
+				queries.push({ name: 'finishers', promise: () => gw2.request('/v2/account/finishers', key) });
+			}
+			if (permissions.indexOf('wallet') > -1) {
+				queries.push({ name: 'wallet', promise: () => gw2.request('/v2/account/wallet', key) });
+			}
+			if (permissions.indexOf('inventories') > -1) {
+				queries.push({ name: 'materials', promise: () => gw2.request('/v2/account/materials', key) });
+				queries.push({ name: 'bank', promise: () => gw2.request('/v2/account/bank', key) });
+				queries.push({ name: 'inventory', promise: () => gw2.request('/v2/account/inventory', key) });
+			}
+			if (permissions.indexOf('pvp') > -1) {
+				queries.push({ name: 'pvp', promise: () => gw2.request('/v2/pvp/stats', key) });
+			}
+			if (permissions.indexOf('characters') > -1) {
+				queries.push({ name: 'characters', promise: () => gw2.request('/v2/characters', key).then(characters => {
+					var char_queries = characters.map(c => ({
+						name: c,
+						promise: () => gw2.request('/v2/characters/'+encodeURIComponent(c), key)
+					}));
+					return Promise.map(char_queries, c => c.promise(), { concurrency: 3 }).then(results => resultsToObject(char_queries, 'name', results));
+				})});
+			}
+			return Promise.map(queries, q => q.promise(), { concurrency: 5 }).then(results => resultsToObject(queries, 'name', results));
+		});
 }
 
 function startPlaying(user) {
 	var session_name = session_prefix+':'+user.id;
 	var time = new Date();
-	return db.getObjectAsync(session_name)
-	.then(session => {
-		if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) return; // recent login/logout
-		if (session && ! session.stop) return; // No logout data (presumed bot restart)
-		session = { start: { time: time } };
-		return gatherData(user)
-		.then(data => {
-			session.start.data = data;
-			return db.setObjectAsync(session_name, session);
-		})
-		.catch(err => {
-			if (err.message === "endpoint requires authentication") return;
-			console.error("Error starting session: "+err.message);
+	return db.getObject(session_name)
+		.then(session => {
+			if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) return; // recent login/logout
+			if (session && ! session.stop) return; // No logout data (presumed bot restart)
+			session = { start: { time: time } };
+			return gatherData(user)
+				.then(data => {
+					session.start.data = data;
+					return db.setObject(session_name, session);
+				})
+				.catch(err => {
+					if (err.message === "endpoint requires authentication") return;
+					console.error("Error starting session: "+err.message);
+				});
 		});
-	});
 }
 
 function stopPlaying(user) {
 	var session_name = session_prefix+':'+user.id;
 	var time = new Date();
-	return db.getObjectAsync(session_name)
-	.then(session => {
-		if (! session) throw new Error('no session');
-		session.stop = { time: time };
-		return gatherData(user).then(data => {
-			session.stop.data = data;
-			return db.setObjectAsync(session_name, session).then(() => getSessionDiff(session));
-		})
-		.then(diff => {
-			var archive_name = archive_prefix+":"+user.id+":"+(new Date(session.start.time).getTime());
-			if (! diff) return; // Nothing changed in the session
-			var archive = {
-				start_time: session.start.time,
-				stop_time: session.stop.time,
-				diff: diff
-			};
-			return db.setObjectAsync(archive_name, archive)
-			.then(() => db.expireObjectAsync(archive_name, archive_ttl))
-		})
-		.catch(err => {
-			if (err.message === "endpoint requires authentication") return;
-			if (err.message === "invalid key") return;
-			if (err.message === "no session") throw err; // rethrow
-			console.error("Error stopping session: " + err.message);
+	return db.getObject(session_name)
+		.then(session => {
+			if (! session) throw new Error('no session');
+			session.stop = { time: time };
+			return gatherData(user).then(data => {
+				session.stop.data = data;
+				return db.setObject(session_name, session).then(() => getSessionDiff(session));
+			})
+				.then(diff => {
+					var archive_name = archive_prefix+":"+user.id+":"+(new Date(session.start.time).getTime());
+					if (! diff) return; // Nothing changed in the session
+					var archive = {
+						start_time: session.start.time,
+						stop_time: session.stop.time,
+						diff: diff
+					};
+					return db.setObject(archive_name, archive)
+						.then(() => db.expireObject(archive_name, archive_ttl));
+				})
+				.catch(err => {
+					if (err.message === "endpoint requires authentication") return;
+					if (err.message === "invalid key") return;
+					if (err.message === "no session") throw err; // rethrow
+					console.error("Error stopping session: " + err.message);
+				});
 		});
-	});
 }
 
 function checkUsers(users) {
@@ -174,7 +174,7 @@ function getSessionDiff(session) {
 
 function parseSession(user) {
 	var session_name = session_prefix+':'+user.id;
-	return db.getObjectAsync(session_name).then(session => {
+	return db.getObject(session_name).then(session => {
 		if (! session) throw new Error("no session");
 		if (session.stop) return session;
 		// Session still in progress
@@ -185,7 +185,6 @@ function parseSession(user) {
 		});
 	}).then(session => {
 		if (! session.stop) throw new Error("no session stop");
-		var string = '';
 		var time_in_ms = new Date(session.stop.time) - new Date(session.start.time);
 		var time_in_mins = Math.round(time_in_ms / 60000);
 		var sentences = [];
@@ -234,7 +233,7 @@ function parseSession(user) {
 			}
 			// item differences
 			if (d.path[0] === "all_items") {
-				var change;
+				let change;
 				if (d.kind === "E") change = d.rhs - d.lhs;
 				if (d.kind === "N") change = d.rhs;
 				if (d.kind === "D") change = d.lhs * -1;
@@ -269,12 +268,12 @@ function parseSession(user) {
 			return sentences.join("  ");
 		});
 	})
-	.catch(err => {
-		if (err.message === "endpoint requires authentication") return;
-		if (err.message === "invalid key") return;
-		if (err.message === "no session") throw err;
-		console.error("Error gathering session data: "+e.message);
-	});
+		.catch(err => {
+			if (err.message === "endpoint requires authentication") return;
+			if (err.message === "invalid key") return;
+			if (err.message === "no session") throw err;
+			console.error("Error gathering session data: "+err.message);
+		});
 }
 
 function coinsToGold(coins) {
@@ -314,18 +313,16 @@ function presenceChanged(oldState, newState) {
 	}
 }
 
-function messageReceived(message) {
+async function messageReceived(message) {
 	var cmd = new RegExp('^!'+phrases.get("SESSION_SHOWLAST")+'$', 'i');
 	if (! message.content.match(cmd)) return;
 	message.channel.startTyping();
-	parseSession(message.author)
-	.catch(err => {
+	const response = await parseSession(message.author).catch(err => {
 		if (err.message === "no session") return phrases.get("SESSION_NO_SESSION");
-		console.error(err.stack);
 		return phrases.get("CORE_ERROR");
-	})
-	.then(response => message.reply(response))
-	.then(() => message.channel.stopTyping());
+	});
+	await message.reply(response);
+	message.channel.stopTyping();
 }
 
 module.exports = function(bot) {
@@ -334,4 +331,4 @@ module.exports = function(bot) {
 	});
 	bot.on("presenceUpdate", presenceChanged);
 	bot.on("message", messageReceived);
-}
+};

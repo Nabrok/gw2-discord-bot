@@ -1,7 +1,6 @@
 var
-	Promise = require('bluebird'),
 	config = require('config'),
-	db = Promise.promisifyAll(require('../lib/db')),
+	db = require('../lib/database'),
 	gw2 = require('../lib/gw2'),
 	phrases = require('../lib/phrases')
 ;
@@ -130,21 +129,22 @@ function messageReceived(message) {
 	var kd_cmd = phrases.get("WVWSCORE_KD");
 	if (! message.content.match(new RegExp('^!('+match_cmd+'|'+score_cmd+'|'+relscore_cmd+'|'+kd_cmd+')$', 'i'))) return;
 	message.channel.startTyping();
-	db.getAccountByUserAsync(message.author.id)
+	db.getAccountByUser(message.author.id)
 		.then(account => (account && account.world) ? account.world : guild_world)
 		.then(world => gw2.request('/v2/wvw/matches?world='+world, null, null, { ttl: 5000 }))
 		.then(match => {
 			return getScores(match, 'all').then(scores => {
 				if (message.content.match(new RegExp('^!'+match_cmd+'$', 'i'))) {
 					return message.reply('', { embed: formatEmbed(match, scores, 'all') })
-					.then(message => {
-						embed_messages.push({ message_id: message.id, match: match.id, map: 'all' });
-						return [refresh_emoji, overall_emoji, eb_emoji, green_emoji, blue_emoji, red_emoji]
-							.map(e => () => message.react(e))
-							.reduce((p,f) => p.then(f), Promise.resolve())
-						;
-					});
+						.then(message => {
+							embed_messages.push({ message_id: message.id, match: match.id, map: 'all' });
+							return [refresh_emoji, overall_emoji, eb_emoji, green_emoji, blue_emoji, red_emoji]
+								.map(e => () => message.react(e))
+								.reduce((p,f) => p.then(f), Promise.resolve())
+							;
+						});
 				}
+				let result = '';
 				if (message.content.match(new RegExp('^!'+score_cmd+'$', 'i')))
 					result = scores.sort((a, b) => (b.victory_points - a.victory_points || b.skirmish - a.skirmish)).map(world => (formatWorldNames(world.names, world.color)+': '+world.victory_points.toLocaleString()+' | '+world.skirmish.toLocaleString() + ' | +'+world.ppt)).join("\n");
 				else if (message.content.match(new RegExp('^!'+kd_cmd+'$', 'i')))
@@ -157,7 +157,7 @@ function messageReceived(message) {
 			});
 		})
 		.catch(e => {
-			console.error('Error retrieving wvw score: '+e.message);
+			console.error('Error retrieving wvw score: '+e.message, e.stack);
 			return message.reply(phrases.get("WVWSCORE_ERROR"));
 		})
 		.finally(() => message.channel.stopTyping())
@@ -178,16 +178,16 @@ function reactionChange(reaction, user) {
 	if (! map) return;
 	embed.map = map;
 	gw2.request('/v2/wvw/matches?id='+embed.match)
-	.then(match => getScores(match, map).then(scores => reaction.message.edit('', { embed: formatEmbed(match, scores, map) })))
-	.catch(e => {
-		console.error("Error updating wvw score embed: "+e.message);
-		return reaction.message.edit(phrases.get("WVWSCORE_EMBED_UPDATE_ERROR"));
-	})
-	.then(() => reaction.remove(user))
-	.catch(e => {
-		return reaction.message.edit(phrases.get("WVWSCORE_EMBED_REACTION_ERROR"));
-	})
-	.catch(e => console.error('WvW score error: '+e.message));
+		.then(match => getScores(match, map).then(scores => reaction.message.edit('', { embed: formatEmbed(match, scores, map) })))
+		.catch(e => {
+			console.error("Error updating wvw score embed: "+e.message);
+			return reaction.message.edit(phrases.get("WVWSCORE_EMBED_UPDATE_ERROR"));
+		})
+		.then(() => reaction.remove(user))
+		.catch(() => {
+			return reaction.message.edit(phrases.get("WVWSCORE_EMBED_REACTION_ERROR"));
+		})
+		.catch(e => console.error('WvW score error: '+e.message));
 }
 
 module.exports = function(bot) {

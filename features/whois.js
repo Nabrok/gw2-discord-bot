@@ -1,7 +1,6 @@
 "use strict";
 const
-	Promise = require("bluebird"),
-	db = Promise.promisifyAll(require("../lib/db")),
+	db = require("../lib/database"),
 	phrases = require("../lib/phrases");
 
 let bot_user;
@@ -16,7 +15,7 @@ function messageReceived(message) {
 		channel.startTyping();
 		var p;
 		if (user.id === bot_user.id) p = message.reply(phrases.get("WHOIS_BOT", { user: bot_user }));
-		else p = db.getAccountByUserAsync(user.id).then(account => {
+		else p = db.getAccountByUser(user.id).then(account => {
 			if (!account) throw new Error("unknown user");
 
 			// Construct message
@@ -40,5 +39,5 @@ module.exports = bot => {
 	bot.on("message", messageReceived);
 	bot.on("ready", () => {
 		bot_user = bot.user;
-	})
+	});
 };

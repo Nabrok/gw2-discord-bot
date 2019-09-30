@@ -1,10 +1,9 @@
 "use strict";
 const
 	MWBot = require("mwbot"),
-	Promise = require("bluebird"),
 	config = require("config"),
 	toMarkdown = require("to-markdown"),
-	db = Promise.promisifyAll(require("../lib/db")),
+	db = require("../lib/database"),
 	phrases = require("../lib/phrases");
 
 const ttl = 1000 * 60 * 60; // Cache wiki responses for an hour to prevent flooding the wiki with requests with the same search terms
@@ -18,7 +17,7 @@ function htmlToMessage(html) {
 			},
 			{ // Filter out all unwanted tags
 				filter: node => !node.nodeName.match(/^(b|strong|i|em|s|del|p)$/i),
-				replacement: (innerHTML, node) => ""
+				replacement: () => ""
 			}
 		]
 	});
@@ -31,27 +30,27 @@ function htmlToMessage(html) {
  * @return {string}      the suffix to add to the subdomain
  */
 function getWikiLang(lang) {
-  // if lang is empty, get the lang set in config file
-  if (lang == '') {
-    lang = config.has('features.language') ? config.get('features.language') : "en";
-  }
+	// if lang is empty, get the lang set in config file
+	if (lang == '') {
+		lang = config.has('features.language') ? config.get('features.language') : "en";
+	}
 
-  var langSuffix = '';
-  switch (lang.toLowerCase()) {
-    case 'fr':
-      langSuffix = '-fr';
-      break;
-    case 'de':
-      langSuffix = '-de';
-      break;
-    case 'es':
-    	langSuffix = '-es';
+	var langSuffix = '';
+	switch (lang.toLowerCase()) {
+		case 'fr':
+			langSuffix = '-fr';
 			break;
-    default:
-    break;
-  }
+		case 'de':
+			langSuffix = '-de';
+			break;
+		case 'es':
+			langSuffix = '-es';
+			break;
+		default:
+			break;
+	}
 
-  return langSuffix;
+	return langSuffix;
 }
 
 function messageReceived(message) {
@@ -67,7 +66,7 @@ function messageReceived(message) {
 	
 		message.channel.startTyping();
 		// Get cache if it exists
-		db.getCachedResponseAsync("wiki" + wikiLang, terms).then(cache => {
+		db.getCachedResponse("wiki" + wikiLang, terms).then(cache => {
 			if (typeof cache === "string") return cache;
 	
 			// Only search if we have something to search for
@@ -120,16 +119,17 @@ function messageReceived(message) {
 				else text = phrases.get("WIKI_LINK", { title, url });
 	
 				// Cache it
-				return db.saveCachedResponseAsync("wiki" + wikiLang, terms, text, ttl).return(text);
+				return db.saveCachedResponse("wiki" + wikiLang, terms, text, ttl).then(() => text);
 			}
 			throw new Error("not found"); // No results
 		}).catch(err => {
 			// Capture errors and construct proper fail message
 			switch (err.message) {
-				case "not found":
+				case "not found": {
 					const text = phrases.get("WIKI_NOT_FOUND");
 					// Cache it
-					return db.saveCachedResponseAsync("wiki" + wikiLang, terms, text, ttl).return(text);
+					return db.saveCachedResponse("wiki" + wikiLang, terms, text, ttl).then(() => text);
+				}
 				case "no title":
 					return phrases.get("WIKI_NO_TERM");
 				default:
@@ -137,8 +137,8 @@ function messageReceived(message) {
 					return phrases.get("WIKI_ERROR", { error: err.message || "" });
 			}
 		})
-		.finally(() => message.channel.stopTyping())
-		.then(text => message.reply(text));
+			.finally(() => message.channel.stopTyping())
+			.then(text => message.reply(text));
 	}
 }
 

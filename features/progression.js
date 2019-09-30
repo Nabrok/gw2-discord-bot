@@ -1,6 +1,5 @@
 var
-	Promise = require('bluebird'),
-	db = Promise.promisifyAll(require('../lib/db')),
+	db = require('../lib/database'),
 	phrases = require('../lib/phrases'),
 	gw2 = require('../lib/gw2')
 ;
@@ -10,10 +9,10 @@ function messageReceived(message) {
 	var wvw_cmd = phrases.get("PROGRESSION_WVW");
 	if (! message.content.match(new RegExp('^!('+fractal_cmd+'|'+wvw_cmd+')$', 'i'))) return;
 	message.channel.startTyping();
-	db.checkKeyPermissionAsync(message.author.id, 'progression')
+	db.checkKeyPermission(message.author.id, 'progression')
 		.then(hasPerm => {
 			if (! hasPerm) throw new Error("requires scope progression");
-			return db.getUserKeyAsync(message.author.id);
+			return db.getUserKey(message.author.id);
 		})
 		.then(key => {
 			if (! key) throw new Error("endpoint requires authentication");
@@ -29,7 +28,7 @@ function messageReceived(message) {
 		.catch(err => {
 			if (err.message === "endpoint requires authentication") return message.reply(phrases.get("CORE_NO_KEY"));
 			if (err.message === "requires scope progression") return message.reply(phrases.get("CORE_MISSING_SCOPE", { scope: 'progression' }));
-			console.error('Error reading account progression: '+ err.message)
+			console.error('Error reading account progression: '+ err.message);
 		})
 		.finally(() => message.channel.stopTyping())
 	;
@@ -37,4 +36,4 @@ function messageReceived(message) {
 
 module.exports = function(bot) {
 	bot.on("message", messageReceived);
-}
+};

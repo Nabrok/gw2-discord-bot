@@ -1,7 +1,7 @@
 var
 	Promise = require('bluebird'),
 	config = require('config'),
-	db = Promise.promisifyAll(require('../lib/db')),
+	db = require('../lib/database'),
 	gw2 = require('../lib/gw2'),
 	phrases = require('../lib/phrases')
 ;
@@ -31,14 +31,14 @@ function requestAPIKey(user) {
 
 function checkUserAccount(user) {
 	var bot = user.client;
-	return db.getUserKeyAsync(user.id)
+	return db.getUserKey(user.id)
 		.then(key => {
 			if (! key) throw new Error('no key');
 			return gw2.request('/v2/account', key);
 		})
 		.then(account => {
 			var in_guild = (account.guilds.indexOf(guild_id) > -1);
-			return db.setUserAccountAsync(user.id, account).then(() => {
+			return db.setUserAccount(user.id, account).then(() => {
 				var promises = [];
 				bot.guilds.forEach(server => {
 					var add_roles = [];
@@ -68,7 +68,7 @@ function checkUserAccount(user) {
 		.catch(err => {
 			if (err.message === 'endpoint requires authentication' || err.message === 'invalid key') {
 				console.log('removing user '+user.id);
-				var promises = [ db.removeUserAsync(user.id) ];
+				const promises = [ db.removeUser(user.id) ];
 				bot.guilds.forEach(server => {
 					var guser = server.members.get(user.id);
 					var removeRoles = [];
@@ -101,7 +101,7 @@ function checkUserAccount(user) {
 		.catch(err => {
 			if (err.message === 'no key') return;
 			if (err.message === 'invalid key') return;
-			console.error('Error checking account: '+err.message);
+			console.error('Error checking account: '+err.message, err.stack);
 		});
 	
 }
@@ -125,7 +125,7 @@ function messageReceived(message) {
 						return message.reply(phrases.get("LINK_KEY_DOESNT_MATCH", { code: oc.code }));
 					}
 					var permissions = token.permissions.map((p) => '**'+p+'**').join(', ');
-					return db.setUserKeyAsync(message.author.id, key, token)
+					return db.setUserKey(message.author.id, key, token)
 						.then(() => message.reply(phrases.get("LINK_KEY_DETAILS", { name: token.name, permissions: permissions })))
 						.then(() => {
 							delete open_codes[message.author.id];
@@ -141,8 +141,8 @@ function messageReceived(message) {
 		}
 		if (message.content === "showtoken") {
 			message.channel.startTyping();
-			db.getUserTokenAsync(message.author.id)
-				.then(token => message.reply('```'+token+'```'))
+			db.getUserToken(message.author.id)
+				.then(token => message.reply('```'+JSON.stringify(token, undefined, 2)+'```'))
 				.catch(e => console.error(e.stack))
 				.then(() => message.channel.stopTyping())
 			;

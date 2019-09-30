@@ -1,18 +1,9 @@
 var
 	Promise = require('bluebird'),
-	db = Promise.promisifyAll(require('../lib/db')),
+	db = require('../lib/database'),
 	phrases = require('../lib/phrases'),
 	gw2 = require('../lib/gw2')
 ;
-
-function startTyping(channel) {
-	return new Promise((resolve, reject) => {
-		channel.startTyping(err => {
-			if (err) return reject(err);
-			resolve();
-		});
-	});
-}
 
 function getBuildString(character, type) {
 	var specs = character.specializations[type].filter(s => !!s);
@@ -107,30 +98,30 @@ function messageReceived(message) {
 		var privacy = matches[3].toLowerCase();
 		message.channel.startTyping();
 		Promise.all([
-			db.getUserKeyAsync(message.author.id)
+			db.getUserKey(message.author.id)
 				.then(key => gw2.request('/v2/characters', key))
 				.then(characters => {
 					var name = characters.find(c => c.toLowerCase() === character.toLowerCase());
 					if (! name) throw new Error("no such character");
 					return name;
 				}),
-			db.getObjectAsync('privacy:'+message.author.id)
+			db.getObject('privacy:'+message.author.id)
 		]).then(r => {
 			var name = r[0], p = r[1];
 			if (! p) p = {};
 			if (privacy === "private") p[name] = 1;
 			if (privacy === "guild")   p[name] = 2;
 			if (privacy === "public")  p[name] = 4;
-			return db.setObjectAsync('privacy:'+message.author.id, p);
+			return db.setObject('privacy:'+message.author.id, p);
 		}).then(() => message.reply(phrases.get("BUILDS_PRIVACY_SET")))
-		.catch(err => {
-			if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
-			else {
-				message.reply(phrases.get("CORE_ERROR"));
-				console.error(err.stack);
-			}
-		})
-		.then(() => message.channel.stopTyping());
+			.catch(err => {
+				if (err.message === "no such character") message.reply(phrases.get("BUILDS_NO_CHARACTER", { name: character }));
+				else {
+					message.reply(phrases.get("CORE_ERROR"));
+					console.error(err.stack);
+				}
+			})
+			.then(() => message.channel.stopTyping());
 		return;
 	}
 	var discord_id = message.author.id;
@@ -142,10 +133,10 @@ function messageReceived(message) {
 	if (cmd === phrases.get("BUILDS_BUILD")) permissions_needed.push("builds");
 	if (cmd === phrases.get("BUILDS_EQUIP")) permissions_needed.push("inventories");
 	message.channel.startTyping();
-	var preamble = db.getUserKeyAsync(discord_id)
+	db.getUserKey(discord_id)
 		.then(key => {
 			if (! key) throw new Error("endpoint requires authentication");
-			return db.checkKeyPermissionAsync(discord_id, permissions_needed)
+			return db.checkKeyPermission(discord_id, permissions_needed)
 				.then(hasPerm => {
 					if (! hasPerm) throw new Error("requires scope "+permissions_needed.join(" and "));
 					return gw2.request('/v2/characters', key);
@@ -157,13 +148,13 @@ function messageReceived(message) {
 					// If we're asking about ourselves, continue
 					if (message.author.id === discord_id) return { name, key };
 					// Check permissions if asking about somebody else
-					return db.getObjectAsync('privacy:'+discord_id)
+					return db.getObject('privacy:'+discord_id)
 						.then(privacy => {
 							if (! privacy || ! privacy[name]) throw new Error("private");
 							if (privacy[name] === 1) throw new Error("private");
 							if (privacy[name] === 4) return { name, key }; // Public
 							// Guild members only
-							return db.getUserKeyAsync(message.author.id)
+							return db.getUserKey(message.author.id)
 								.then(author_key => Promise.all([
 									gw2.request('/v2/account', key),
 									gw2.request('/v2/account', author_key)
@@ -204,7 +195,7 @@ function messageReceived(message) {
 
 module.exports = function(bot) {
 	bot.on("message", messageReceived);
-}
+};
 
 module.exports.getBuildString = getBuildString;
 module.exports.getEquipString = getEquipString;

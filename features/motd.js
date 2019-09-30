@@ -1,5 +1,4 @@
 var
-	async = require('async'),
 	Autolinker = require('autolinker'),
 	config = require('config'),
 	gw2 = require('../lib/gw2'),
@@ -42,7 +41,7 @@ module.exports = function(bot) {
 		var text = motd.motd + "\n\n- "+motd.user+"\n"+time.toDateString();
 
 		// Trim text
-		text = text.split('\n').map(function(t) { return t.trim(); }).join('\n').trim();
+		text = text.split('\n').map(function(t) { return t.trim() }).join('\n').trim();
 
 		// Convert all urls to a proper url if enabled
 		if (convert_urls) {

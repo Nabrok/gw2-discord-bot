@@ -2,6 +2,7 @@
 config/local*
 phrases/local.js*
 features/web/public/*.map
+discord-bot.sqlite
 
 ########################################################################
 # gitignore definitions taken from https://github.com/github/gitignore #

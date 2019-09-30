@@ -2,6 +2,13 @@
 
 refresh_member_interval = 86400 # Number of seconds between automatic account data refresh of each member
 
+[knex]
+client = "sqlite3"
+useNullAsDefault = true
+
+[knex.connection]
+filename = "./discord-bot.sqlite"
+
 [redis]
 host = "127.0.0.1"
 port = "6379"

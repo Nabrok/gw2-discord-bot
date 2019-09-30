@@ -3,7 +3,8 @@ var
 	config = require('config'),
 	Discord = require('discord.js'),
 	gw2 = require('./lib/gw2'),
-	phrases = require('./lib/phrases')
+	phrases = require('./lib/phrases'),
+	db = require('./lib/database')
 ;
 
 var language = config.has('features.language') ? config.get('features.language') : "en";
@@ -39,4 +40,4 @@ bot.on("message", function(message) {
 var token = config.get('discord.token');
 if (! token.match(/^Bot /)) token = 'Bot '+token;
 
-bot.login(token);
+db.knex.migrate.latest().then(() => bot.login(token));

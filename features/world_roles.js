@@ -1,53 +1,38 @@
 var
 	Promise = require('bluebird'),
-	db = Promise.promisifyAll(require('../lib/db')),
+	db = require('../lib/database'),
 	gw2 = require('../lib/gw2')
 ;
 
 function delay(ms) {
-	return new Promise((resolve, reject) => setTimeout(resolve, ms));
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-var sub = db.subscribe("user_tokens:*");
-
 module.exports = function(bot) {
-	// This event will fire when a user token is removed from the database
-	sub.on("pmessage", (pattern, channel, message) => {
-		if (message !== 'del') return;
-		var parts = channel.split(':');
-		var key = parts[2], userid = parts[3];
-		if (key !== "user_tokens") return;
-		if (! userid) return;
-		gw2.getAllWorlds()
-		.then(worlds => {
-			var promises = [];
-			bot.guilds.forEach(server => {
-				var user = server.members.get(userid);
-				if (! user) return;
-				worlds.forEach(world => {
-					const serverHasRole = server.roles.some(r => r.name === world.name);
-					if (! serverHasRole) return;
-					const role = server.roles.find(r => r.name === world.name);
-					const userHasRole = user.roles.has(role.id);
-					if (! userHasRole) return;
-					promises.push(() => user.removeRole(role));
-				});
+	db.subscribe(async action => {
+		if (action.type !== 'removeUser') return;
+		const worlds = await gw2.getAllWorlds();
+		const promises = [];
+		bot.guilds.forEach(server => {
+			const user = server.members.get(action.user_id);
+			if (! user) return;
+			worlds.forEach(world => {
+				const server_has_role = server.roles.some(r => r.name === world.name);
+				if (! server_has_role) return;
+				const role = server.roles.find(r => r.name === world.name);
+				const user_has_role = user.roles.has(role.id);
+				if (! user_has_role) return;
+				promises.push(() => user.removeRole(role));
 			});
-			return promises.reduce((p,f) => p.then(f).then(() => delay(200)), Promise.resolve());
-		})
-		.catch(err => {
-			console.error('Error removing invalid user from world roles: '+err.message);
 		});
+		return promises.reduce((p,f) => p.then(f).then(() => delay(200)), Promise.resolve());
 	});
 
-	gw2.on('/v2/account', (account, key, from_cache) => {
-		//if (from_cache) return;
+	gw2.on('/v2/account', account => {
 		Promise.all([
 			gw2.getAllWorlds(),
-			db.getUserByAccountAsync(account.name)
-		]).then(results => {
-			var worlds = results[0];
-			var user_id = results[1];
+			db.getUserByAccount(account.name)
+		]).then(([worlds, user_id]) => {
 			if (! user_id) return;
 			var promises = [];
 			bot.guilds.forEach(server => {
