@@ -10,8 +10,9 @@
   "scripts": {
     "start": "node discord_bot.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "webpack -d --watch",
-    "build": "NODE_ENV=production webpack -p"
+    "preversion": "git-branch-is master",
+    "version": "version-changelog CHANGELOG.md && changelog-verify CHANGELOG.md && git add CHANGELOG.md || git reset --hard",
+    "postversion": "git push --follow-tags"
   },
   "author": "Nabrok.9023",
   "license": "ISC",
@@ -34,7 +35,10 @@
     "toml": "^2.3.0"
   },
   "devDependencies": {
-    "eslint": "^6.5.0"
+    "changelog-verify": "^1.1.2",
+    "eslint": "^6.5.0",
+    "git-branch-is": "^3.0.0",
+    "version-changelog": "^3.1.1"
   },
   "optionalDependencies": {}
 }
