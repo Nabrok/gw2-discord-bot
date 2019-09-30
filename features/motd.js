@@ -60,7 +60,7 @@ module.exports = function(bot) {
 		}
 
 		Promise.all(bot.guilds.map(server => {
-			var channel = server.channels.find('name', channel_name);
+			var channel = server.channels.find(channel => channel.name === channel_name);
 			if (! channel) return console.log(`Can't update MOTD: No channel "${channel_name}" on guild "${server.name}"`);
 			return channel.setTopic(text);
 		})).catch(e => console.error(e.stack));

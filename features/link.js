@@ -46,14 +46,14 @@ function checkUserAccount(user) {
 					var guser = server.members.get(user.id);
 					if (! guser) return;
 					if (world_role_name) {
-						var world_role = server.roles.find('name', world_role_name);
+						var world_role = server.roles.find(role => role.name === world_role_name);
 						if (account.world !== world_id && guser.roles.has(world_role.id))
 							del_roles.push(world_role);
 						else if (account.world === world_id && ! guser.roles.has(world_role.id))
 							add_roles.push(world_role);
 					}
 					if (guild_role_name) {
-						var guild_role = server.roles.find('name', guild_role_name);
+						var guild_role = server.roles.find(role => role.name === guild_role_name);
 						if (in_guild && ! guser.roles.has(guild_role.id))
 							add_roles.push(guild_role);
 						else if (guser.roles.has(guild_role.id) && ! in_guild)
@@ -74,11 +74,11 @@ function checkUserAccount(user) {
 					var removeRoles = [];
 					if (! guser) return;
 					if (world_role_name) {
-						var world_role = server.roles.find('name', world_role_name);
+						var world_role = server.roles.find(role => role.name === world_role_name);
 						removeRoles.push(world_role);
 					}
 					if (guild_role_name) {
-						var guild_role = server.roles.find('name', guild_role_name);
+						var guild_role = server.roles.find(role => role.name === guild_role_name);
 						removeRoles.push(guild_role);
 					}
 					if (removeRoles.length > 0) promises.push(guser.removeRoles(removeRoles));
@@ -165,14 +165,14 @@ function checkMembers(bot) {
 
 function initServer(server) {
 	var promises = [];
-	if (guild_role_name && ! server.roles.exists('name', guild_role_name)) {
+	if (guild_role_name && ! server.roles.some(role => role.name === guild_role_name)) {
 		promises.push(server.createRole({
 			name: guild_role_name,
 			hoist: false,
 			mentionable: true
 		}));
 	}
-	if (world_role_name && ! server.roles.exists('name', world_role_name)) {
+	if (world_role_name && ! server.roles.some(role => role.name === world_role_name)) {
 		promises.push(server.createRole({
 			name: world_role_name,
 			hoist: false,

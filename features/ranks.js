@@ -15,7 +15,7 @@ var create_roles = config.has('guild.create_roles') ? config.get('guild.create_r
 function initServer(server, ranks) {
 	if (! create_roles) return;
 	return Promise.all(ranks
-		.filter(r => ! server.roles.exists(role => role.name === r.id))
+		.filter(r => ! server.roles.some(role => role.name === r.id))
 		.map(r => server.createRole({
 			name: r.id,
 			hoist: true,
@@ -36,7 +36,7 @@ function syncMembersToRoles(server, members, ranks) {
 			var allMembers = [];
 			var member_role = (member_role_name) ? server.roles.find(role => role.name === member_role_name) : null;
 			return Promise.all(members
-				.filter(member => server.roles.exists(role => role.name === member.rank)) // Ignore rank with no corresponding role
+				.filter(member => server.roles.some(role => role.name === member.rank)) // Ignore rank with no corresponding role
 				.map(member => db.getUserByAccount(member.name).then(user_id => {
 					if (! user_id) return;
 					allMembers.push(member.name);
@@ -72,7 +72,7 @@ function syncMembersToRoles(server, members, ranks) {
 						)
 					);
 				}
-				ranks.filter(rank => server.roles.exists(role => role.name === rank.id)).forEach(rank => {
+				ranks.filter(rank => server.roles.some(role => role.name === rank.id)).forEach(rank => {
 					var role = server.roles.find(role => role.name === rank.id);
 					var users_with_role = role.members;
 					promises = promises.concat(users_with_role.map(user => db.getAccountByUser(user.id).then(account => {

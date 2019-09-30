@@ -33,7 +33,7 @@ bot.on("disconnected", function() {
 bot.on("message", function(message) {
 	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
 		var help = features.map(f => phrases.get(f.toUpperCase()+"_HELP")).filter(f => !!f).join("\n\n").trim();
-		message.author.sendMessage("```Commands```\n"+help+`\n\nVersion: ${version}`);
+		message.author.send("```Commands```\n"+help+`\n\nVersion: ${version}`);
 		return;
 	}
 });
