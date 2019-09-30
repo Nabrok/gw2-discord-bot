@@ -6,6 +6,7 @@ var
 	phrases = require('./lib/phrases'),
 	db = require('./lib/database')
 ;
+const version = require('./package').version;
 
 var language = config.has('features.language') ? config.get('features.language') : "en";
 var features = config.has('features.enabled') ? config.get('features.enabled').slice() : [];
@@ -32,7 +33,7 @@ bot.on("disconnected", function() {
 bot.on("message", function(message) {
 	if (message.content.match(new RegExp('^!'+phrases.get("CORE_HELP")+'$', 'i'))) {
 		var help = features.map(f => phrases.get(f.toUpperCase()+"_HELP")).filter(f => !!f).join("\n\n").trim();
-		message.author.sendMessage("```Commands```\n"+help);
+		message.author.sendMessage("```Commands```\n"+help+`\n\nVersion: ${version}`);
 		return;
 	}
 });
