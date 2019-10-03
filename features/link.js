@@ -5,6 +5,7 @@ var
 	gw2 = require('../lib/gw2'),
 	phrases = require('../lib/phrases')
 ;
+const { gql } = require('apollo-server');
 
 var guild_id = config.has('guild.id') ? config.get('guild.id') : null;
 var guild_key = config.has('guild.key') ? config.get('guild.key') : null;
@@ -14,9 +15,38 @@ var world_role_name = config.has('world.role') ? config.get('world.role') : null
 var guild_role_name = config.has('guild.member_role') ? config.get('guild.member_role') : null;
 
 const refresh_member_interval = config.has('refresh_member_interval') ? config.get('refresh_member_interval') * 1000 : null;
-console.log('refresh_member_interval', refresh_member_interval);
 
 var open_codes = {}; // Codes we're currently expecting to see in an API key name
+
+const typeDefs = gql`
+enum GW2AccountAccess { None PlayForFree GuildWars2 HeartOfThorns PathOfFire }
+enum GW2Population { Low Medium High VeryHigh Full }
+
+type GW2World {
+	id: ID!
+	name: String
+	population: GW2Population
+}
+
+type GW2Account {
+	id: ID!
+	name: String
+	age: Int
+	world: GW2World
+	created: Date
+	access: [GW2AccountAccess]
+	commander: Boolean
+	fractal_level: Int
+	daily_ap: Int
+	monthly_ap: Int
+	wvw_rank: Int
+	last_modified: Date
+}
+
+extend type DiscordUser {
+	gw2: GW2Account
+}
+`;
 
 function requestAPIKey(user) {
 	var code = Math.random().toString(36).toUpperCase().substr(2, 5);
@@ -187,6 +217,9 @@ gw2.on('/v2/account', (account, key, from_cache) => {
 	// TODO: Some of the code from checkUserAccount could probably go here
 });
 
+/**
+ * @param {import('discord.js').Client} bot
+ */
 module.exports = function(bot) {
 	bot.on("message", messageReceived);
 	bot.on("presenceUpdate", presenceChanged);
@@ -201,4 +234,13 @@ module.exports = function(bot) {
 	if (refresh_member_interval) {
 		setInterval(() => checkMembers(bot), refresh_member_interval);
 	}
+
+	return { typeDefs, resolvers: {
+		DiscordUser: {
+			gw2: user => db.getAccountByUser(user.id)
+		},
+		GW2Account: {
+			world: account => gw2.getWorlds([ account.world ]).then(r => r[account.world])
+		}
+	} };
 };
