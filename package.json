@@ -17,7 +17,9 @@
   "author": "Nabrok.9023",
   "license": "ISC",
   "dependencies": {
+    "@apollo/federation": "^0.10.0",
     "@discordjs/uws": "^10.149.0",
+    "apollo-server": "^2.9.4",
     "autolinker": "^1.1.0",
     "bluebird": "^3.4.6",
     "config": "^1.21.0",
@@ -26,6 +28,7 @@
     "jwt-decode": "^2.1.0",
     "knex": "^0.19.4",
     "mwbot": "^1.0.4",
+    "node-fetch": "^2.6.0",
     "node-opus": "^0.2.9",
     "opusscript": "0.0.6",
     "parse-domain": "^0.2.1",

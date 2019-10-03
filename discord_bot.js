@@ -6,6 +6,7 @@ var
 	phrases = require('./lib/phrases'),
 	db = require('./lib/database')
 ;
+const graphql = require('./lib/graphql');
 const version = require('./package').version;
 
 var language = config.has('features.language') ? config.get('features.language') : "en";
@@ -18,12 +19,15 @@ var bot = new Discord.Client({ autoReconnect: true });
 bot.setMaxListeners(Infinity);
 
 if (features.indexOf("link") === -1) features.unshift("link");
+const schemas = [];
 features.forEach(feature => {
-	require('./features/'+feature)(bot);
+	const schema = require('./features/'+feature)(bot);
+	if (schema) schemas.push(schema);
 });
 
 bot.on("ready", function() {
 	console.log('bot ready');
+	graphql(schemas, bot);
 });
 
 bot.on("disconnected", function() {
