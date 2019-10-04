@@ -16,11 +16,27 @@ var guild_role_name = config.has('guild.member_role') ? config.get('guild.member
 
 const refresh_member_interval = config.has('refresh_member_interval') ? config.get('refresh_member_interval') * 1000 : null;
 
-var open_codes = {}; // Codes we're currently expecting to see in an API key name
+const open_codes = {}; // Codes we're currently expecting to see in an API key name
+
+function getOpenCode(user_id) {
+	if (! open_codes[user_id]) return;
+	const now = new Date();
+	if (open_codes[user_id].expires < now) return;
+	return open_codes[user_id];
+}
+
+setInterval(() => {
+	const now = new Date();
+	Object.entries(open_codes).forEach(([user_id, c]) => {
+		if (c.expires < now) delete open_codes[user_id];
+	});
+}, 60 * 1000);
 
 const typeDefs = gql`
 enum GW2AccountAccess { None PlayForFree GuildWars2 HeartOfThorns PathOfFire }
 enum GW2Population { Low Medium High VeryHigh Full }
+enum GW2TokenPermissions { account builds characters guilds inventories progression pvp tradingpost unlocks wallet }
+enum GW2TokenType { APIKey Subtoken }
 
 type GW2World {
 	id: ID!
@@ -43,20 +59,58 @@ type GW2Account {
 	last_modified: Date
 }
 
+type GW2Token {
+	id: ID!
+	name: String
+	permissions: [GW2TokenPermissions]
+	type: GW2TokenType
+	expires_at: Date
+	issued_at: Date
+	urls: [String]
+}
+
+type TokenCode {
+	code: String
+	expires: Date
+}
+
 extend type DiscordUser {
 	gw2: GW2Account
+	token: GW2Token
+}
+
+extend type Query {
+	tokenCode: TokenCode
+}
+
+extend type Mutation {
+	setApiKey(key: String): GW2Token
 }
 `;
 
-function requestAPIKey(user) {
-	var code = Math.random().toString(36).toUpperCase().substr(2, 5);
-	open_codes[user.id] = {
-		code: code,
-		user: user
-	};
-	// Remove code in 5 minutes
-	setTimeout(function() { delete open_codes[user.id] }, 5 * 60 * 1000);
-	return user.sendMessage(phrases.get("LINK_REPLY_WITH_KEY", { code: code }));
+function requestAPIKey(user_id) {
+	const current_code = getOpenCode(user_id);
+	if (current_code) return current_code;
+	const code = Math.random().toString(36).toUpperCase().substr(2, 5);
+	const now = new Date().getTime();
+	const new_code = { code, expires: new Date(now + (5 * 60 * 1000)) };
+	open_codes[user_id] = new_code;
+	return new_code;
+}
+
+async function applyAPIKey(user, key) {
+	const open_code = getOpenCode(user.id);
+	if (! open_code) throw new Error('No open codes for this user');
+
+	const { code } = open_code;
+	const token = await gw2.request('/v2/tokeninfo', key);
+	if (! token.name.match(code)) return { error: phrases.get("LINK_KEY_DOESNT_MATCH", { code }) };
+
+	await db.setUserKey(user.id, key, token);
+
+	delete open_codes[user.id];
+	await checkUserAccount(user);
+	return token;
 }
 
 function checkUserAccount(user) {
@@ -140,31 +194,22 @@ function messageReceived(message) {
 	if (message.channel.type === 'dm') {
 		if (message.content.match(new RegExp('^!?'+phrases.get("LINK_LINK")+'$', 'i'))) {
 			// User wants to change API key
-			requestAPIKey(message.author);
+			const { code } = requestAPIKey(message.author.id);
+			return message.author.send(phrases.get("LINK_REPLY_WITH_KEY", { code }));
 		}
 		if (open_codes[message.author.id]) {
-			var oc = open_codes[message.author.id];
 			// We're waiting on an API key for this user
-			var match = message.content.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{20}-\w{4}-\w{4}-\w{4}-\w{12}/);
+			const match = message.content.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{20}-\w{4}-\w{4}-\w{4}-\w{12}/);
 			if (match) {
 				message.channel.startTyping();
 				// We have one, test it.
-				var key = match[0];
-				gw2.request('/v2/tokeninfo', key).then(token => {
-					if (! token.name.match(oc.code)) {
-						return message.reply(phrases.get("LINK_KEY_DOESNT_MATCH", { code: oc.code }));
-					}
-					var permissions = token.permissions.map((p) => '**'+p+'**').join(', ');
-					return db.setUserKey(message.author.id, key, token)
-						.then(() => message.reply(phrases.get("LINK_KEY_DETAILS", { name: token.name, permissions: permissions })))
-						.then(() => {
-							delete open_codes[message.author.id];
-							return checkUserAccount(message.author)
-								.then(() => gw2.request('/v2/account', key));
-						})
-					;
-				}).catch(err => {
-					console.error(err.stack);
+				const key = match[0];
+				applyAPIKey(message.author, key).then(token => {
+					if (token.error) return message.reply(token.error);
+
+					const permissions = token.permissions.map((p) => '**'+p+'**').join(', ');
+					return message.reply(phrases.get("LINK_KEY_DETAILS", { name: token.name, permissions }));
+				}).catch(() => {
 					return message.reply(phrases.get("LINK_ERROR"));
 				}).then(() => message.channel.stopTyping());
 			}
@@ -237,10 +282,22 @@ module.exports = function(bot) {
 
 	return { typeDefs, resolvers: {
 		DiscordUser: {
-			gw2: user => db.getAccountByUser(user.id)
+			gw2: user => db.getAccountByUser(user.id),
+			token: user => db.getUserToken(user.id)
 		},
 		GW2Account: {
 			world: account => gw2.getWorlds([ account.world ]).then(r => r[account.world])
+		},
+		Query: {
+			tokenCode: (_, _args, { user }) => requestAPIKey(user.id)
+		},
+		Mutation: {
+			setApiKey: async (_, { key }, { user }) => {
+				const bot_user = bot.users.get(user.id);
+				const result = await applyAPIKey(bot_user, key);
+				if (result.error) throw new Error(result.error);
+				return result;
+			}
 		}
 	} };
 };
