@@ -42,6 +42,14 @@ bot.on("message", function(message) {
 	}
 });
 
+['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGKILL', 'SIGTRAP', 'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGEGV', 'SIGUSR2', 'SIGTERM'].forEach(sig => {
+	process.on(sig, async () => {
+		console.log(`Exiting on ${sig}`);
+		await bot.destroy();
+		process.exit(1);
+	});
+});
+
 var token = config.get('discord.token');
 if (! token.match(/^Bot /)) token = 'Bot '+token;
 
