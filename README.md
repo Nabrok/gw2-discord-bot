@@ -22,6 +22,13 @@ Copy the file config/default.toml to config/local.toml and make your changes the
 
 You need to create an application on the discord developers site at https://discordapp.com/developers/applications/.   Create a bot user for it.  The client ID and the bot user token should be entered into your configuration file.  When you start the bot it will display a link which you can use to add it to any servers that you own.
 
+Once you have everything configured run ...
+
+```
+$ npm install --production
+$ npm run start
+```
+
 Features
 --------
 
@@ -74,6 +81,10 @@ For example:
 
 When this feature is enabled, the game will monitor users game status in discord.  When they enter and leave Guild Wars 2 it creates a snapshot of their account.  Entering the `!last session` command will display a summary of what they did during that session.
 
+GraphQL Server
+--------------
+
+The bot includes a graphql server which can be used to query it and can allow you to do things like set keys through a web interface.  This is enabled by default but will only listen on localhost.  If you want to make use of this you will need to put it behind a reverse proxy such as nginx.
 
 Customize Responses and Localication
 ------------------------------------
