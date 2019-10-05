@@ -42,7 +42,7 @@ bot.on("message", function(message) {
 	}
 });
 
-['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGKILL', 'SIGTRAP', 'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGEGV', 'SIGUSR2', 'SIGTERM'].forEach(sig => {
+['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP', 'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGEGV', 'SIGUSR2', 'SIGTERM'].forEach(sig => {
 	process.on(sig, async () => {
 		console.log(`Exiting on ${sig}`);
 		await bot.destroy();
