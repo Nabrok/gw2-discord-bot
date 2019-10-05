@@ -36,5 +36,4 @@ token = "" # Token for your discord bot user
 
 [features]
 language = "en"
-# Add "web" to turn on the web server
 enabled = ["ranks", "motd", "wvw_score", "progression", "builds", "wiki", "session", "whois", "li"]
