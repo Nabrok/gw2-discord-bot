@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+## [2.1.1][] - 2019-10-05
+
 ### Fixed
 - Properly logout of discord when bot stops
 
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Store keys in sqlite instead of redis
 
 
-[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/Nabrok/gw2-discord-bot/tree/v2.0.0
