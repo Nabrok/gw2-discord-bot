@@ -34,15 +34,8 @@ setInterval(() => {
 
 const typeDefs = gql`
 enum GW2AccountAccess { None PlayForFree GuildWars2 HeartOfThorns PathOfFire }
-enum GW2Population { Low Medium High VeryHigh Full }
 enum GW2TokenPermissions { account builds characters guilds inventories progression pvp tradingpost unlocks wallet }
 enum GW2TokenType { APIKey Subtoken }
-
-type GW2World {
-	id: ID!
-	name: String
-	population: GW2Population
-}
 
 type GW2Account {
 	id: ID!
