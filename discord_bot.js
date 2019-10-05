@@ -46,6 +46,7 @@ bot.on("message", function(message) {
 	process.on(sig, async () => {
 		console.log(`Exiting on ${sig}`);
 		await bot.destroy();
+		await db.knex.destroy();
 		process.exit(1);
 	});
 });

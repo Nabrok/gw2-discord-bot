@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased][]
 
 ### Fixed
+- Properly close database connections when bot stops
 - Fix exit signal handlers
 
 ## [2.1.1][] - 2019-10-05

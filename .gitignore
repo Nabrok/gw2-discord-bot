@@ -3,6 +3,7 @@ config/local*
 phrases/local.js*
 features/web/public/*.map
 *.sqlite
+*.sqlite-journal
 *_dump.json
 
 ########################################################################
