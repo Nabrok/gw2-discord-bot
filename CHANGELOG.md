@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Version number to !help response
+- GraphQL server
 
 ### Fixed
 - Deprecation warnings from discord.js
