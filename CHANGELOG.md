@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+### Added
+- GraphQL schema for wvw_score feature
+
 ## [2.1.2][] - 2019-10-05
 
 ### Fixed

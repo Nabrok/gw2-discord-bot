@@ -4,6 +4,36 @@ var
 	gw2 = require('../lib/gw2'),
 	phrases = require('../lib/phrases')
 ;
+const { gql } = require('apollo-server');
+
+const typeDefs = gql`
+enum WvWColor { red green blue }
+enum WvWMap { all Center RedHome BlueHome GreenHome }
+
+extend type GW2World {
+	match: WvWMatch
+}
+
+type WvWMatch {
+	id: ID
+	region: String
+	tier: Int
+	start_time: Date
+	end_time: Date
+	scores(map: WvWMap): [WvWTeamScore]
+}
+
+type WvWTeamScore {
+	color: WvWColor
+	worlds: [GW2World]
+	skirmish: Int
+	score: Int
+	victory_points: Int
+	ppt: Int
+	kills: Int
+	deaths: Int
+}
+`;
 
 var guild_world = config.has('world.id') ? config.get('world.id') : null;
 var bot_id;
@@ -55,30 +85,36 @@ function formatWorldNames(worlds, color) {
 	}
 }
 
-function getScores(match, map) {
-	var world_ids = [].concat.apply([], Object.keys(match.all_worlds).map(c => match.all_worlds[c]));
-	var score_obj = (map === 'all') ? match : match.maps.find(m => m.type === map);
-	var skirmish = match.skirmishes[match.skirmishes.length - 1];
-	var skirmish_scores = (map === 'all') ? skirmish.scores : skirmish.map_scores.find(m => m.type === map).scores;
-	return gw2.getWorlds(world_ids).then(worlds => {
-		var names = {};
-		var colors = Object.keys(match.all_worlds);
-		for (var c in colors) {
-			var color = colors[c];
-			names[color] = [ match.worlds[color] ].concat(match.all_worlds[color].filter(w => (w !== match.worlds[color]))).map(w => worlds[w].name);
-		}
-		var scores = Object.keys(match.worlds).map(color => ({
+async function getScores(match, map, lookup_names = true) {
+	const this_skirmish = match.skirmishes[match.skirmishes.length - 1];
+	const skirmish_scores = (map === 'all') ? this_skirmish.scores : this_skirmish.map_scores.find(m => m.type === map).scores;
+	const score_obj = (map === 'all') ? match : match.maps.find(m => m.type === map);
+
+	const scores = Object.keys(match.worlds).map(color => {
+		const score = {
 			color: color,
-			names: names[color],
-			skirmish: skirmish_scores[color],
-			score: score_obj.scores[color],
-			victory_points: match.victory_points[color],
+			worlds: match.all_worlds[ color ],
+			skirmish: skirmish_scores[ color ],
+			score: score_obj.scores[ color ],
+			victory_points: match.victory_points[ color ],
 			ppt: (map === 'all') ? countPPT(match, color) : countMapPPT(score_obj, color),
-			kills: score_obj.kills[color],
-			deaths: score_obj.deaths[color]
-		}));
-		return scores;
+			kills: score_obj.kills[ color ],
+			deaths: score_obj.deaths[ color ]
+		};
+		return score;
 	});
+
+	if (lookup_names) {
+		const world_ids = [].concat.apply([], Object.keys(match.all_worlds).map(c => match.all_worlds[c]));
+		const worlds = await gw2.getWorlds(world_ids);
+		const colors = Object.keys(match.all_worlds);
+		for (let c in colors) {
+			const color = colors[c];
+			const names = [ match.worlds[color] ].concat(match.all_worlds[color].filter(w => (w !== match.worlds[color]))).map(w => worlds[w].name);
+			scores.find(s => s.color === color).names = names;
+		}
+	}
+	return scores;
 }
 
 function formatEmbed(match, scores, map) {
@@ -200,4 +236,27 @@ module.exports = function(bot) {
 	});
 	bot.on("message", messageReceived);
 	bot.on("messageReactionAdd", reactionChange);
+
+	return { typeDefs, resolvers: {
+		GW2World: {
+			match: async (world) => {
+				const match = await gw2.request('/v2/wvw/matches?world='+world.id, null, null, { ttl: 5000 });
+				const region = region_names[match.id.split('-')[0]];
+				const tier = match.id.split('-')[1];
+				return {
+					...match,
+					region,
+					tier,
+					start_time: new Date(match.start_time),
+					end_time: new Date(match.end_time)
+				};
+			}
+		},
+		WvWMatch: {
+			scores: (match, { map = 'all' }) => getScores(match, map, false)
+		},
+		WvWTeamScore: {
+			worlds: score => gw2.getWorlds(score.worlds).then(w => Object.values(w))
+		}
+	} };
 };
