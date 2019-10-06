@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - GraphQL schema for wvw_score feature
+- GraphQL schema for bot guild
 
 ## [2.1.2][] - 2019-10-05
 
