@@ -5,6 +5,19 @@ var
 	diff = require('deep-diff').diff,
 	phrases = require('../lib/phrases')
 ;
+const gql = require('graphql-tag');
+
+const typeDefs = gql`
+extend type Query {
+	last_session: Session
+}
+
+type Session {
+	start_time: Date
+	stop_time: Date
+	diff: JSON
+}
+`;
 
 const session_prefix = 'session';
 const archive_prefix = 'session_archive';
@@ -325,10 +338,21 @@ async function messageReceived(message) {
 	message.channel.stopTyping();
 }
 
-module.exports = function(bot) {
+module.exports = bot => {
 	bot.on("ready", () => {
 		checkUsers(bot.users);
 	});
 	bot.on("presenceUpdate", presenceChanged);
 	bot.on("message", messageReceived);
+
+	return { typeDefs, resolvers: {
+		Query: {
+			last_session: (_, _args, { user }) => getSession(user)
+		},
+		Session: {
+			start_time: session => new Date(session.start.time),
+			stop_time: session => new Date(session.stop.time),
+			diff: session => getSessionDiff(session)
+		}
+	} };
 };
