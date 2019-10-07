@@ -172,31 +172,34 @@ function getSessionDiff(session) {
 	return differences;
 }
 
-function parseSession(user) {
-	var session_name = session_prefix+':'+user.id;
-	return db.getObject(session_name).then(session => {
-		if (! session) throw new Error("no session");
-		if (session.stop) return session;
-		// Session still in progress
-		session.stop = { time: new Date() };
-		return gatherData(user).then(data => {
-			session.stop.data = data;
-			return session;
-		});
-	}).then(session => {
-		if (! session.stop) throw new Error("no session stop");
-		var time_in_ms = new Date(session.stop.time) - new Date(session.start.time);
-		var time_in_mins = Math.round(time_in_ms / 60000);
-		var sentences = [];
+async function getSession(user) {
+	const session_name = session_prefix+':'+user.id;
+	const session = await db.getObject(session_name);
+	if (! session) throw new Error('no session');
+	if (session.stop) return session;
+
+	// Still in progress
+	const data = await gatherData(user);
+	session.stop = { time: new Date(), data };
+	return session;
+}
+
+async function parseSession(user) {
+	try {
+		const session = await getSession(user);
+		const time_in_ms = new Date(session.stop.time) - new Date(session.start.time);
+		const time_in_mins = Math.round(time_in_ms / 60000);
+		const sentences = [];
 		sentences.push(phrases.get("SESSION_PLAYTIME", { minutes: time_in_mins }));
 		if (! session.start.data) return sentences.join("  "); // No data from API, show play time only.
-		var wvw_stats = [];
-		var pvp_stats = [];
-		var new_achievements = [];
-		var items_gained = [];
-		var items_lost = [];
-		var pvp_rank_ups = 0;
-		var differences = getSessionDiff(session);
+
+		const wvw_stats = [];
+		const pvp_stats = [];
+		const new_achievements = [];
+		const items_gained = [];
+		const items_lost = [];
+		let pvp_rank_ups = 0;
+		const differences = getSessionDiff(session);
 		if (differences) differences.forEach(d => {
 			// account differences
 			if (d.path[0] === "account" && d.path[1] === "wvw_rank") wvw_stats.push(phrases.get("SESSION_WVW_RANK", { number: (d.rhs - d.lhs) }));
@@ -217,9 +220,9 @@ function parseSession(user) {
 					if (d.path[1] === "239") pvp_stats.push(phrases.get("SESSION_PVP_KILLS", { count: d.rhs - d.lhs }));
 					if (d.path[1] === "265") pvp_stats.push(phrases.get("SESSION_PVP_RATED_WINS", { count: d.rhs - d.lhs }));
 					if (d.path[1] === "241") {
-						var unrated_before = session.start.data.achievements['241'].current - session.start.data.achievements['265'].current;
-						var unrated_after = session.stop.data.achievements['241'].current - session.stop.data.achievements['265'].current;
-						var unrated_diff = unrated_after - unrated_before;
+						const unrated_before = session.start.data.achievements['241'].current - session.start.data.achievements['265'].current;
+						const unrated_after = session.stop.data.achievements['241'].current - session.stop.data.achievements['265'].current;
+						const unrated_diff = unrated_after - unrated_before;
 						if (unrated_diff) pvp_stats.push(phrases.get("SESSION_PVP_UNRATED_WINS", { count: unrated_diff }));
 					}
 				}
@@ -251,29 +254,26 @@ function parseSession(user) {
 		if (pvp_rank_ups) pvp_stats.unshift(phrases.get("SESSION_PVP_RANK", { number: pvp_rank_ups }));
 		if (pvp_stats.length > 0) sentences.push(phrases.get("SESSION_PVP", { counts: pvp_stats.join(", ") }));
 		if (wvw_stats.length > 0) sentences.push(phrases.get("SESSION_WVW", { counts: wvw_stats.join(", ") }));
-		return Promise.all([
+		const [ach, prices] = await Promise.all([
 			gw2.getAchievements(new_achievements),
 			gw2.getPrices(items_gained.map(i => i.id).concat(items_lost.map(i => i.id)))
-		]).then(results => {
-			var ach = results[0], prices = results[1];
-			if (new_achievements.length > 0) sentences.push(phrases.get("SESSION_ACHIEVEMENTS", { count: new_achievements.length, list: new_achievements.map(a => ach[a].name).join(", ") }));
-			if (items_gained.length > 0) {
-				var value_gained = items_gained.reduce((t, i) => (t + (i.change * (prices[i.id] ? prices[i.id].buys.unit_price : 0))), 0);
-				sentences.push(phrases.get("SESSION_ITEMS_GAINED", { count: items_gained.length, value: coinsToGold(value_gained) }));
-			}
-			if (items_lost.length > 0) {
-				var value_lost = items_lost.reduce((t, i) => (t + (i.change * (prices[i.id] ? prices[i.id].buys.unit_price : 0))), 0);
-				sentences.push(phrases.get("SESSION_ITEMS_LOST", { count: items_lost.length, value: coinsToGold(value_lost) }));
-			}
-			return sentences.join("  ");
-		});
-	})
-		.catch(err => {
-			if (err.message === "endpoint requires authentication") return;
-			if (err.message === "invalid key") return;
-			if (err.message === "no session") throw err;
-			console.error("Error gathering session data: "+err.message);
-		});
+		]);
+		if (new_achievements.length > 0) sentences.push(phrases.get("SESSION_ACHIEVEMENTS", { count: new_achievements.length, list: new_achievements.map(a => ach[a].name).join(", ") }));
+		if (items_gained.length > 0) {
+			const value_gained = items_gained.reduce((t, i) => (t + (i.change * (prices[i.id] ? prices[i.id].buys.unit_price : 0))), 0);
+			sentences.push(phrases.get("SESSION_ITEMS_GAINED", { count: items_gained.length, value: coinsToGold(value_gained) }));
+		}
+		if (items_lost.length > 0) {
+			const value_lost = items_lost.reduce((t, i) => (t + (i.change * (prices[i.id] ? prices[i.id].buys.unit_price : 0))), 0);
+			sentences.push(phrases.get("SESSION_ITEMS_LOST", { count: items_lost.length, value: coinsToGold(value_lost) }));
+		}
+		return sentences.join("  ");
+	} catch(err) {
+		if (err.message === "endpoint requires authentication") return;
+		if (err.message === "invalid key") return;
+		if (err.message === "no session") throw err;
+		console.error("Error gathering session data: "+err.message);
+	}
 }
 
 function coinsToGold(coins) {
