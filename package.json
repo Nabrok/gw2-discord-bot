@@ -25,6 +25,7 @@
     "config": "^1.21.0",
     "deep-diff": "^0.3.4",
     "discord.js": "^11.0.0",
+    "graphql-type-json": "^0.3.0",
     "jwt-decode": "^2.1.0",
     "knex": "^0.19.4",
     "mwbot": "^1.0.4",
