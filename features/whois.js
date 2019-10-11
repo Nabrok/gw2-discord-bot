@@ -39,7 +39,7 @@ async function messageReceived(message) {
 }
 
 /**
- * @param {import('discord.js')} bot
+ * @param {import('discord.js').Client} bot
  */
 module.exports = bot => {
 	bot.on("message", messageReceived);
