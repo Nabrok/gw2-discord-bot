@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GraphQL schema for bot guild
 - GraphQL schema for session
 
+### Fixed
+- `!whois` response when target is not registered
+
 ## [2.1.2][] - 2019-10-05
 
 ### Fixed

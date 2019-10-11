@@ -5,7 +5,11 @@ const
 
 let bot_user;
 
-function messageReceived(message) {
+/**
+ * 
+ * @param {import('discord.js').Message} message 
+ */
+async function messageReceived(message) {
 	const channel = message.channel;
 
 	if (message.content.match(new RegExp(`^!${phrases.get("WHOIS_WHOIS")} (.*)?$`, "i"))) {
@@ -13,28 +17,30 @@ function messageReceived(message) {
 		const user = message.mentions.users.first();
 		if (! user) return;
 		channel.startTyping();
-		var p;
-		if (user.id === bot_user.id) p = message.reply(phrases.get("WHOIS_BOT", { user: bot_user }));
-		else p = db.getAccountByUser(user.id).then(account => {
-			if (!account) throw new Error("unknown user");
+		try {
+			if (user.id === bot_user.id) await message.reply(phrases.get("WHOIS_BOT", { user: bot_user }));
+			else {
+				const account = await db.getAccountByUser(user.id);
+				if (! account) throw new Error("unknown user");
 
-			// Construct message
-			if (user.id === message.author.id) return message.reply(phrases.get("WHOIS_SELF", { account_name: account.name }));
-			else return message.reply(phrases.get("WHOIS_KNOWN", { user: user, account_name: account.name }));
-		});
-		p.catch(err => {
-			// Capture errors and construct proper fail message
-			switch (err.message) {
-				case "unknown user":
-					return phrases.get("WHOIS_UNKNOWN");
-				default:
-					console.log(`Error in whois command initiated by ${message.author.username}#${message.author.discriminator}: ${err.message}`);
-					return;
+				if (user.id === message.author.id) await message.reply(phrases.get("WHOIS_SELF", { account_name: account.name }));
+				else await message.reply(phrases.get("WHOIS_KNOWN", { user: user, account_name: account.name }));
 			}
-		}).then(() => channel.stopTyping());
+		} catch(err) {
+			if (err.message === 'unknown user') {
+				await message.reply(phrases.get("WHOIS_UNKNOWN"));
+			} else {
+				console.error(`Error in whois command initiated by ${message.author.username}#${message.author.discriminator}: ${err.message}`);
+				await message.reply(phrases.get("CORE_ERROR"));
+			}
+		}
+		channel.stopTyping();
 	}
 }
 
+/**
+ * @param {import('discord.js')} bot
+ */
 module.exports = bot => {
 	bot.on("message", messageReceived);
 	bot.on("ready", () => {
