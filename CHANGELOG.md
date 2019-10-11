@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `!whois` response when target is not registered
+- Will now respond with a no key message on the `!last session` command if the user is not registered
 
 ## [2.1.2][] - 2019-10-05
 

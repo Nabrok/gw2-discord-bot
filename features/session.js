@@ -188,7 +188,11 @@ function getSessionDiff(session) {
 async function getSession(user) {
 	const session_name = session_prefix+':'+user.id;
 	const session = await db.getObject(session_name);
-	if (! session) throw new Error('no session');
+	if (! session) {
+		const account = await db.getAccountByUser(user.id);
+		if (! account) throw new Error('no user account');
+		throw new Error('no session');
+	}
 	if (session.stop) return session;
 
 	// Still in progress
@@ -284,8 +288,8 @@ async function parseSession(user) {
 	} catch(err) {
 		if (err.message === "endpoint requires authentication") return;
 		if (err.message === "invalid key") return;
-		if (err.message === "no session") throw err;
 		console.error("Error gathering session data: "+err.message);
+		throw err;
 	}
 }
 
@@ -331,6 +335,7 @@ async function messageReceived(message) {
 	if (! message.content.match(cmd)) return;
 	message.channel.startTyping();
 	const response = await parseSession(message.author).catch(err => {
+		if (err.message === 'no user account') return phrases.get("CORE_NO_KEY");
 		if (err.message === "no session") return phrases.get("SESSION_NO_SESSION");
 		return phrases.get("CORE_ERROR");
 	});
