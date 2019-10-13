@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+### Fixed
+- Catch any errors on bot startup
+
 ## [2.2.0][] - 2019-10-11
 
 ### Added

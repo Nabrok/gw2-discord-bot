@@ -54,4 +54,7 @@ bot.on("message", function(message) {
 var token = config.get('discord.token');
 if (! token.match(/^Bot /)) token = 'Bot '+token;
 
-db.knex.migrate.latest().then(() => bot.login(token));
+db.knex.migrate.latest().then(() => bot.login(token)).catch(err => {
+	console.error(err);
+	process.exit(1);
+});
