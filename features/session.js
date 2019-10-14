@@ -74,55 +74,61 @@ function gatherData(user) {
 		});
 }
 
-function startPlaying(user) {
-	var session_name = session_prefix+':'+user.id;
-	var time = new Date();
-	return db.getObject(session_name)
-		.then(session => {
-			if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) return; // recent login/logout
-			if (session && ! session.stop) return; // No logout data (presumed bot restart)
-			session = { start: { time: time } };
-			return gatherData(user)
-				.then(data => {
-					session.start.data = data;
-					return db.setObject(session_name, session);
-				})
-				.catch(err => {
-					if (err.message === "endpoint requires authentication") return;
-					console.error("Error starting session: "+err.message);
-				});
-		});
+async function startPlaying(user) {
+	const session_name = session_prefix+':'+user.id;
+	const time = new Date();
+	try {
+		const session = await db.getObject(session_name);
+		if (session && session.stop && (time - new Date(session.stop.time) <= relog_window)) {
+			// recent login/logout
+			delete session.stop;
+			await db.setObject(session_name, session);
+		}
+		if (session && ! session.stop) return; // No logout data (presumed bot restart)
+		const new_session = { start: { time: time } };
+		const data = await gatherData(user);
+		new_session.start.data = data;
+		await db.setObject(session_name, new_session);
+	} catch(err) {
+		if (err.message === "endpoint requires authentication") return;
+		console.error("Error starting session",err);
+	}
 }
 
-function stopPlaying(user) {
-	var session_name = session_prefix+':'+user.id;
-	var time = new Date();
-	return db.getObject(session_name)
-		.then(session => {
-			if (! session) throw new Error('no session');
-			session.stop = { time: time };
-			return gatherData(user).then(data => {
-				session.stop.data = data;
-				return db.setObject(session_name, session).then(() => getSessionDiff(session));
-			})
-				.then(diff => {
-					var archive_name = archive_prefix+":"+user.id+":"+(new Date(session.start.time).getTime());
-					if (! diff) return; // Nothing changed in the session
-					var archive = {
-						start_time: session.start.time,
-						stop_time: session.stop.time,
-						diff: diff
-					};
-					return db.setObject(archive_name, archive)
-						.then(() => db.expireObject(archive_name, archive_ttl));
-				})
-				.catch(err => {
-					if (err.message === "endpoint requires authentication") return;
-					if (err.message === "invalid key") return;
-					if (err.message === "no session") throw err; // rethrow
-					console.error("Error stopping session: " + err.message);
-				});
-		});
+/**
+ * 
+ * @param {import('discord.js').User} user 
+ * @param {boolean} refresh 
+ */
+async function stopPlaying(user, refresh = false) {
+	const session_name = session_prefix+':'+user.id;
+	const time = new Date();
+	try {
+		const session = await db.getObject(session_name);
+		if (! session) throw new Error('no session');
+		if (! refresh) session.stop = { time: time };
+
+		const data = await gatherData(user);
+		session.stop.data = data;
+		await db.setObject(session_name, session);
+
+		// Save archive
+		const diff = getSessionDiff(session);
+		if (! diff) return; // Nothing changed in the session
+		const archive_name = archive_prefix+":"+user.id+":"+(new Date(session.start.time).getTime());
+		const archive = {
+			start_time: session.start.time,
+			stop_time: session.stop.time,
+			diff: diff
+		};
+		await db.setObject(archive_name, archive);
+		await db.expireCache(archive_name, archive_ttl);
+	} catch(err) {
+		if (err.message === "endpoint requires authentication") return;
+		if (err.message === "invalid key") return;
+		if (err.message === "no session") throw err; // rethrow
+		console.error("Error stopping session", err);
+	}
 }
 
 function checkUsers(users) {
@@ -304,23 +310,27 @@ function coinsToGold(coins) {
 	return string;
 }
 
+const refresh_timers = {};
+
 function presenceChanged(oldState, newState) {
 	var isPlaying  = (newState.presence.game && newState.presence.game.name === "Guild Wars 2");
 	var wasPlaying = (oldState.presence.game && oldState.presence.game.name === "Guild Wars 2");
 	if (isPlaying && ! wasPlaying) {
 		// User started playing
+		if (refresh_timers[newState.id]) clearTimeout(refresh_timers[newState.id]);
 		startPlaying(newState);
 	}
 	if (wasPlaying && ! isPlaying) {
 		// User stopped playing
 		stopPlaying(newState).then(() => {
 			// Refresh data in 5 minutes to make sure we don't have old cached data
-			setTimeout(function() {
-				stopPlaying(newState).catch(err => {
+			refresh_timers[newState.id] = setTimeout(function() {
+				stopPlaying(newState, true).catch(err => {
 					if (err.message === "no session") return;
 					if (err.message === "invalid key") return;
 					console.error("Error stopping session: " + err.message);
 				});
+				delete refresh_timers[newState.id];
 			}, 305000);
 		}).catch(err => {
 			if (err.message === "no session") return;
