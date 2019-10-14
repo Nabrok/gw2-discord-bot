@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+## [2.2.1][] - 2019-10-13
+
 ### Fixed
 - Catch any errors on bot startup
 - Handling of quick disconnect/reconnect in session data
@@ -46,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Store keys in sqlite instead of redis
 
 
-[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.1.2...v2.2.0
 [2.1.2]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.1.0...v2.1.1
