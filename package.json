@@ -29,7 +29,7 @@
     "jwt-decode": "^2.1.0",
     "knex": "^0.19.4",
     "mwbot": "^1.0.4",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "node-opus": "^0.2.9",
     "opusscript": "0.0.6",
     "parse-domain": "^0.2.1",
