@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+### Fixed
+- `!last session` crash when unable to retrieve information on a new achievement
+
 ## [2.2.1][] - 2019-10-13
 
 ### Fixed
