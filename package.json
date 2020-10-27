@@ -19,7 +19,7 @@
   "dependencies": {
     "@apollo/federation": "^0.10.0",
     "@discordjs/uws": "^10.149.0",
-    "apollo-server": "^2.9.4",
+    "apollo-server": "^2.14.2",
     "autolinker": "^1.1.0",
     "bluebird": "^3.4.6",
     "config": "^1.21.0",
