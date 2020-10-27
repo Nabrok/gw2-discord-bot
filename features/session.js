@@ -281,7 +281,7 @@ async function parseSession(user) {
 			gw2.getAchievements(new_achievements),
 			gw2.getPrices(items_gained.map(i => i.id).concat(items_lost.map(i => i.id)))
 		]);
-		if (new_achievements.length > 0) sentences.push(phrases.get("SESSION_ACHIEVEMENTS", { count: new_achievements.length, list: new_achievements.map(a => ach[a].name).join(", ") }));
+		if (new_achievements.length > 0) sentences.push(phrases.get("SESSION_ACHIEVEMENTS", { count: new_achievements.length, list: new_achievements.filter(a => !! ach[a]).map(a => ach[a].name).join(", ") }));
 		if (items_gained.length > 0) {
 			const value_gained = items_gained.reduce((t, i) => (t + (i.change * (prices[i.id] ? prices[i.id].buys.unit_price : 0))), 0);
 			sentences.push(phrases.get("SESSION_ITEMS_GAINED", { count: items_gained.length, value: coinsToGold(value_gained) }));
