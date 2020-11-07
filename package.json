@@ -27,7 +27,7 @@
     "discord.js": "^11.6.4",
     "graphql-type-json": "^0.3.0",
     "jwt-decode": "^2.1.0",
-    "knex": "^0.19.4",
+    "knex": "^0.19.5",
     "mwbot": "^1.0.4",
     "node-fetch": "^2.6.0",
     "node-opus": "^0.2.9",
