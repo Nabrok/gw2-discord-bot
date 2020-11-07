@@ -226,9 +226,14 @@ function presenceChanged(oldUser, newUser) {
 		checkUserAccount(newUser);
 }
 
+/**
+ * @param {import('discord.js').Client} bot
+ */
 function checkMembers(bot) {
-	const members = bot.guilds.reduce((members, guild) => members.concat(guild.members.array()), []);
-	return Promise.all(members.map(m => checkUserAccount(m)));
+	return Promise.all(bot.guilds.map(async guild => {
+		await guild.fetchMembers();
+		return guild.members.reduce((p, m) => p.then(() => checkUserAccount(m)), Promise.resolve());
+	}));
 }
 
 function initServer(server) {
