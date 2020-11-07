@@ -318,8 +318,8 @@ const refresh_timers = {};
  * @param {import('discord.js').GuildMember} newState 
  */
 function presenceChanged(oldState, newState) {
-	const isPlaying = newState.presence.activities.some(activity => activity.name === 'Guild Wars 2');
-	const wasPlaying = oldState.presence.activities.some(activity => activity.name === 'Guild Wars 2');
+	const isPlaying = newState.presence.activities && newState.presence.activities.some(activity => activity.name === 'Guild Wars 2');
+	const wasPlaying = oldState.presence.activities && oldState.presence.activities.some(activity => activity.name === 'Guild Wars 2');
 	if (isPlaying && ! wasPlaying) {
 		// User started playing
 		if (refresh_timers[newState.id]) clearTimeout(refresh_timers[newState.id]);
