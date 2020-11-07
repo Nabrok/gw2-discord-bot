@@ -5,12 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+### Fixed
+- Check members sequentially to prevent too many requests error
+- Adjust is playing check to remove deperecations
+
 ## [2.2.4][] - 2020-11-07
 
 ### Fixed
 - Suppress SQL constraint error when updating API key
 - Make sure member data is loaded when updating ranks and world roles
-- Check members sequentially to prevent too many requests error
 
 ## [2.2.3][] - 2020-10-27
 

@@ -312,9 +312,14 @@ function coinsToGold(coins) {
 
 const refresh_timers = {};
 
+/**
+ * 
+ * @param {import('discord.js').GuildMember} oldState 
+ * @param {import('discord.js').GuildMember} newState 
+ */
 function presenceChanged(oldState, newState) {
-	var isPlaying  = (newState.presence.game && newState.presence.game.name === "Guild Wars 2");
-	var wasPlaying = (oldState.presence.game && oldState.presence.game.name === "Guild Wars 2");
+	const isPlaying = newState.presence.activities.some(activity => activity.name === 'Guild Wars 2');
+	const wasPlaying = oldState.presence.activities.some(activity => activity.name === 'Guild Wars 2');
 	if (isPlaying && ! wasPlaying) {
 		// User started playing
 		if (refresh_timers[newState.id]) clearTimeout(refresh_timers[newState.id]);
@@ -353,6 +358,10 @@ async function messageReceived(message) {
 	message.channel.stopTyping();
 }
 
+/**
+ * 
+ * @param {import('discord.js').Client} bot 
+ */
 module.exports = bot => {
 	bot.on("ready", () => {
 		checkUsers(bot.users);
