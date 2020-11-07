@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased][]
 
 ### Fixed
+- Suppress SQL constraint error when updating API key
 - Make sure member data is loaded when updating ranks and world roles
 
 ## [2.2.3][] - 2020-10-27
