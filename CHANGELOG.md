@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+### Fixed
+- Make sure member data is loaded when updating ranks and world roles
+
 ## [2.2.3][] - 2020-10-27
 
 - Version bump

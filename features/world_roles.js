@@ -13,8 +13,8 @@ module.exports = function(bot) {
 		if (action.type !== 'removeUser') return;
 		const worlds = await gw2.getAllWorlds();
 		const promises = [];
-		bot.guilds.forEach(server => {
-			const user = server.members.get(action.user_id);
+		await Promise.all(bot.guilds.map(async server => {
+			const user = await server.fetchMember(action.user_id);
 			if (! user) return;
 			worlds.forEach(world => {
 				const server_has_role = server.roles.some(r => r.name === world.name);
@@ -24,7 +24,7 @@ module.exports = function(bot) {
 				if (! user_has_role) return;
 				promises.push(() => user.removeRole(role));
 			});
-		});
+		}));
 		return promises.reduce((p,f) => p.then(f).then(() => delay(200)), Promise.resolve());
 	});
 
@@ -32,11 +32,11 @@ module.exports = function(bot) {
 		Promise.all([
 			gw2.getAllWorlds(),
 			db.getUserByAccount(account.name)
-		]).then(([worlds, user_id]) => {
+		]).then(async ([worlds, user_id]) => {
 			if (! user_id) return;
-			var promises = [];
-			bot.guilds.forEach(server => {
-				var user = server.members.get(user_id);
+			const promises = [];
+			await Promise.all(bot.guilds.map(async server => {
+				const user = await server.fetchMember(user_id);
 				if (! user) {
 					console.error(`World Roles: User ${user_id} is not on server %{server.name}`);
 					return;
@@ -57,7 +57,7 @@ module.exports = function(bot) {
 						}
 					}
 				});
-			});
+			}));
 			// Run through each promise sequentially with a short delay in between
 			return promises.reduce((p,f) => p.then(f).then(() => delay(200)), Promise.resolve());
 		}).catch(e => console.error(e.stack));
