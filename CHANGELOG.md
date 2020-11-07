@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+## [2.2.6][] - 2020-11-07
+
 ### Fixed
 - Crash when presence doesn't contain activities
 
@@ -75,7 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Store keys in sqlite instead of redis
 
 
-[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.5...HEAD
+[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.6...HEAD
+[2.2.6]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.5...v2.2.6
 [2.2.5]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.4...v2.2.5
 [2.2.4]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.3...v2.2.4
 [2.2.3]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.2...v2.2.3
