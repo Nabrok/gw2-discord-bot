@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+### Added
+- Instructions on required intent settings for the discord app.
+
 ### Fixed
 - Check members sequentially to prevent too many requests error
 - Adjust is playing check to remove deperecations

@@ -20,7 +20,7 @@ Setup
 
 Copy the file config/default.toml to config/local.toml and make your changes there.  Any options you want to leave at the default value you can remove from the local.toml file.
 
-You need to create an application on the discord developers site at https://discordapp.com/developers/applications/.   Create a bot user for it.  The client ID and the bot user token should be entered into your configuration file.  When you start the bot it will display a link which you can use to add it to any servers that you own.
+You need to create an application on the discord developers site at https://discordapp.com/developers/applications/.  Make sure that in the "Privileged Gateway Intents" section that **PRESENCE INTENT** and **SERVER MEMBERS INTENT** are enabled.  Create a bot user for it.  The client ID and the bot user token should be entered into your configuration file.  When you start the bot it will display a link which you can use to add it to any servers that you own.
 
 Once you have everything configured run ...
 
