@@ -28,66 +28,62 @@ function delay(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function syncMembersToRoles(server, members, ranks) {
-	return initServer(server, ranks)
-		.then(() => {
-			var membersInRank = {};
-			ranks.forEach(r => membersInRank[r.id] = []);
-			var allMembers = [];
-			var member_role = (member_role_name) ? server.roles.find(role => role.name === member_role_name) : null;
-			return Promise.all(members
-				.filter(member => server.roles.some(role => role.name === member.rank)) // Ignore rank with no corresponding role
-				.map(member => db.getUserByAccount(member.name).then(user_id => {
-					if (! user_id) return;
-					allMembers.push(member.name);
-					var user = server.members.get(user_id);
-					var funcs = [];
-					if (member_role && ! user.roles.has(member_role.id)) funcs.push(() => user.addRole(member_role));
-					ranks.forEach(rank => {
-						var role = server.roles.find(role => role.name === rank.id);
-						if (rank.id === member.rank) {
-							membersInRank[member.rank].push(member.name);
-							if (! user.roles.has(role.id)) funcs.push(() => user.addRole(role));
-						} else {
-							if (user.roles.has(role.id)) funcs.push(() => user.removeRole(role));
-						}
-					});
-					//return funcs.reduce((p, f) => p.then(f), Promise.resolve());
-					// For reasons we need to add a timeout to make this work properly.  Revisit with a future discord.js version.
-					return funcs.reduce((p, f) => p.then(f).then(() => delay(200)), Promise.resolve());
-				}))
-			).then(() => {
-				// Remove anybody not in the guild roster
-				var promises = [];
-				var funcs = [];
-				if (member_role) {
-					var users_with_role = member_role.members;
-					promises = promises.concat(
-						users_with_role.map(user =>
-							db.getAccountByUser(user.id)
-								.then(account => {
-									if (! account || allMembers.indexOf(account.name) === -1) funcs.push(() => user.removeRole(member_role));
-									return true;
-								})
-						)
-					);
+async function syncMembersToRoles(server, members, ranks) {
+	await initServer(server, ranks);
+	const membersInRank = {};
+	ranks.forEach(r => membersInRank[r.id] = []);
+	const allMembers = [];
+	const member_role = (member_role_name) ? server.roles.find(role => role.name === member_role_name) : null;
+	await Promise.all(members
+		.filter(member => server.roles.some(role => role.name === member.rank)) // Ignore rank with no corresponding role
+		.map(member => db.getUserByAccount(member.name).then(async user_id => {
+			if (! user_id) return;
+			allMembers.push(member.name);
+			const user = await server.fetchMember(user_id);
+			const funcs = [];
+			if (member_role && ! user.roles.has(member_role.id)) funcs.push(() => user.addRole(member_role));
+			ranks.forEach(rank => {
+				var role = server.roles.find(role => role.name === rank.id);
+				if (rank.id === member.rank) {
+					membersInRank[member.rank].push(member.name);
+					if (! user.roles.has(role.id)) funcs.push(() => user.addRole(role));
+				} else {
+					if (user.roles.has(role.id)) funcs.push(() => user.removeRole(role));
 				}
-				ranks.filter(rank => server.roles.some(role => role.name === rank.id)).forEach(rank => {
-					var role = server.roles.find(role => role.name === rank.id);
-					var users_with_role = role.members;
-					promises = promises.concat(users_with_role.map(user => db.getAccountByUser(user.id).then(account => {
-						if (! account || membersInRank[rank.id].indexOf(account.name) === -1) funcs.push(() => user.removeRole(role));
-						return true;
-					})));
-				});
-				return Promise.all(promises)
-				// This should work, but it doesn't
-				//.then(() => funcs.reduce((p, f) => p.then(f), Promise.resolve()))
-				// Adding a timeout makes it work.  Maybe revisit this with a future discord.js version.
-					.then(() => funcs.reduce((p, f) => p.then(f).then(() => delay(200)), Promise.resolve()));
 			});
-		})
-	;
+			//return funcs.reduce((p, f) => p.then(f), Promise.resolve());
+			// For reasons we need to add a timeout to make this work properly.  Revisit with a future discord.js version.
+			return funcs.reduce((p, f) => p.then(f).then(() => delay(200)), Promise.resolve());
+		}))
+	);
+	// Remove anybody not in the guild roster
+	let promises = [];
+	const funcs = [];
+	if (member_role) {
+		const users_with_role = member_role.members;
+		promises = promises.concat(
+			users_with_role.map(user =>
+				db.getAccountByUser(user.id)
+					.then(account => {
+						if (! account || allMembers.indexOf(account.name) === -1) funcs.push(() => user.removeRole(member_role));
+						return true;
+					})
+			)
+		);
+	}
+	ranks.filter(rank => server.roles.some(role => role.name === rank.id)).forEach(rank => {
+		var role = server.roles.find(role => role.name === rank.id);
+		var users_with_role = role.members;
+		promises = promises.concat(users_with_role.map(user => db.getAccountByUser(user.id).then(account => {
+			if (! account || membersInRank[rank.id].indexOf(account.name) === -1) funcs.push(() => user.removeRole(role));
+			return true;
+		})));
+	});
+	return Promise.all(promises)
+		// This should work, but it doesn't
+		//.then(() => funcs.reduce((p, f) => p.then(f), Promise.resolve()))
+		// Adding a timeout makes it work.  Maybe revisit this with a future discord.js version.
+		.then(() => funcs.reduce((p, f) => p.then(f).then(() => delay(200)), Promise.resolve()));
 }
 
 function messageReceived(message) {
