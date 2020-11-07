@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
+## [2.2.4][] - 2020-11-07
+
 ### Fixed
 - Suppress SQL constraint error when updating API key
 - Make sure member data is loaded when updating ranks and world roles
@@ -61,7 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Store keys in sqlite instead of redis
 
 
-[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.3...HEAD
+[Unreleased]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.4...HEAD
+[2.2.4]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.3...v2.2.4
 [2.2.3]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.2...v2.2.3
 [2.2.2]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/Nabrok/gw2-discord-bot/compare/v2.2.0...v2.2.1
