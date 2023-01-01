@@ -22,7 +22,7 @@
     "apollo-server": "^2.9.4",
     "autolinker": "^1.1.0",
     "bluebird": "^3.4.6",
-    "config": "^1.21.0",
+    "config": "^3.3.8",
     "deep-diff": "^0.3.4",
     "discord.js": "^11.6.4",
     "graphql-type-json": "^0.3.0",
